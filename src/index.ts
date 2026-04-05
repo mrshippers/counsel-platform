@@ -70,8 +70,14 @@ app.route("/api/export", exportRoutes);
 app.route("/api/gdpr", gdprRoutes);
 app.route("/api/pricing", pricingRoutes);
 
-// Serve static frontend files for non-API routes
+// Serve frontend HTML for non-API routes
 app.get("*", async (c) => {
+  // Try to serve from static assets binding first
+  const env = c.env as Record<string, unknown>;
+  if (env.ASSETS) {
+    const assetResponse = await (env.ASSETS as { fetch: (req: Request) => Promise<Response> }).fetch(c.req.raw);
+    if (assetResponse.status !== 404) return assetResponse;
+  }
   return c.text("Counsel — Case Management for UK Law Firms", 200);
 });
 
