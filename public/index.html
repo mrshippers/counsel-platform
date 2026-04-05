@@ -3,599 +3,1283 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Counsel — Case Management</title>
-<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<title>Counsel -- Case Management for UK Law Firms</title>
+<meta name="description" content="Counsel: Intelligent case management for UK law firms. Triage, track, and manage cases with clarity.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <style>
-*{margin:0;padding:0;box-sizing:border-box}
-:root{
---void:#06090F;--deep:#0B1120;--base:#0F172A;--raised:#141E35;--surface:#192440;
---gold:#C9A96E;--goldLight:#DBBF8A;--goldPale:#E8D5AB;--goldGlow:rgba(201,169,110,0.08);--goldGlowStrong:rgba(201,169,110,0.18);
---blue:#5B8DEF;--blueDim:rgba(91,141,239,0.1);
---text:#E8E2D6;--textSec:#9BA4B8;--textMut:#5C6680;
---success:#5CB87A;--successDim:rgba(92,184,122,0.08);
---warning:#E2B04A;--warningDim:rgba(226,176,74,0.08);
---danger:#E05555;--dangerDim:rgba(224,85,85,0.08);
---glass:rgba(15,23,42,0.55);--glassBorder:rgba(201,169,110,0.07);
---r:14px;--rLg:20px;--rSm:8px;
+/* ============================================================
+   COUNSEL DESIGN SYSTEM
+   ============================================================ */
+:root {
+  --void: #06090F;
+  --deep: #0B1120;
+  --base: #0F172A;
+  --raised: #141E35;
+  --surface: #192440;
+  --gold: #C9A96E;
+  --gold-light: #DBBF8A;
+  --gold-glow: rgba(201,169,110,0.08);
+  --blue: #5B8DEF;
+  --blue-dim: rgba(91,141,239,0.1);
+  --text: #E8E2D6;
+  --text-sec: #9BA4B8;
+  --text-mut: #5C6680;
+  --success: #5CB87A;
+  --success-dim: rgba(92,184,122,0.08);
+  --warning: #E2B04A;
+  --warning-dim: rgba(226,176,74,0.08);
+  --danger: #E05555;
+  --danger-dim: rgba(224,85,85,0.08);
+  --font-display: 'Cormorant Garamond', Georgia, serif;
+  --font-body: 'Outfit', system-ui, -apple-system, sans-serif;
+  --ease: cubic-bezier(0.4, 0, 0.2, 1);
+  --sidebar-w: 260px;
+  --topbar-h: 72px;
 }
-body{font-family:'Outfit',sans-serif;background:var(--void);color:var(--text);min-height:100vh;-webkit-font-smoothing:antialiased;overflow-x:hidden}
-*::-webkit-scrollbar{width:5px}*::-webkit-scrollbar-track{background:transparent}*::-webkit-scrollbar-thumb{background:rgba(201,169,110,0.15);border-radius:10px}
-@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
-@keyframes rise{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
-@keyframes meshDrift{0%{transform:translate(0,0)}50%{transform:translate(-20px,15px)}100%{transform:translate(10px,-10px)}}
 
-.bg-atmosphere{position:fixed;inset:0;pointer-events:none;z-index:0;overflow:hidden}
-.bg-mesh{position:absolute;inset:-50%;width:200%;height:200%;background:radial-gradient(ellipse 600px 400px at 20% 20%,rgba(201,169,110,0.06) 0%,transparent 60%),radial-gradient(ellipse 400px 500px at 80% 30%,rgba(91,141,239,0.03) 0%,transparent 50%),radial-gradient(ellipse 350px 500px at 50% 80%,rgba(201,169,110,0.04) 0%,transparent 55%);animation:meshDrift 40s ease-in-out infinite alternate}
-.bg-orb{position:absolute;border-radius:50%;filter:blur(80px)}
-.bg-orb-1{width:350px;height:350px;background:radial-gradient(circle,rgba(201,169,110,0.1),transparent 70%);top:-5%;left:5%}
-.bg-orb-2{width:280px;height:280px;background:radial-gradient(circle,rgba(91,141,239,0.05),transparent 70%);bottom:5%;right:8%}
-.bg-noise{position:fixed;inset:0;pointer-events:none;z-index:9999;opacity:.02;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");background-repeat:repeat;background-size:200px}
+/* Reset */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { font-size: 15px; -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
+body {
+  font-family: var(--font-body);
+  color: var(--text);
+  background: var(--void);
+  min-height: 100vh;
+  overflow-x: hidden;
+  line-height: 1.5;
+}
 
-.glass{background:var(--glass);backdrop-filter:blur(30px) saturate(1.4);-webkit-backdrop-filter:blur(30px) saturate(1.4);border:1px solid var(--glassBorder);border-radius:var(--rLg);padding:22px;box-shadow:0 2px 24px rgba(0,0,0,0.3);transition:all .3s ease}
-.glass:hover{border-color:var(--goldGlowStrong)}
+/* Scrollbar */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: rgba(201,169,110,0.25); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: rgba(201,169,110,0.4); }
+* { scrollbar-width: thin; scrollbar-color: rgba(201,169,110,0.25) transparent; }
 
-/* LOGIN */
-#login-screen{display:flex;align-items:center;justify-content:center;min-height:100vh;position:relative;z-index:1}
-.login-card{width:100%;max-width:420px;padding:40px}
-.login-card h1{font-family:'Cormorant Garamond',serif;font-size:36px;font-weight:600;color:var(--gold);letter-spacing:-0.03em;margin-bottom:4px}
-.login-card h1 .dot{display:inline-block;width:5px;height:5px;background:var(--gold);border-radius:50%;margin-left:2px;margin-bottom:4px;opacity:.6}
-.login-card p{color:var(--textMut);font-size:13px;margin-bottom:28px}
-.form-group{margin-bottom:16px}
-.form-group label{display:block;font-size:11px;font-weight:600;color:var(--textMut);text-transform:uppercase;letter-spacing:.1em;margin-bottom:6px}
-.form-group input{width:100%;padding:10px 14px;background:rgba(255,255,255,0.03);border:1px solid var(--glassBorder);border-radius:var(--rSm);color:var(--text);font-family:'Outfit',sans-serif;font-size:14px;outline:none;transition:border .2s}
-.form-group input:focus{border-color:var(--gold)}
-.btn-gold{width:100%;padding:11px;background:linear-gradient(135deg,var(--gold),#B89858);border:1px solid var(--gold);border-radius:var(--rSm);color:var(--void);font-size:13px;font-weight:600;cursor:pointer;font-family:'Outfit',sans-serif;box-shadow:0 2px 16px rgba(201,169,110,0.15);transition:all .3s;margin-top:8px}
-.btn-gold:hover{box-shadow:0 4px 24px rgba(201,169,110,0.25)}
-.btn-gold:disabled{opacity:.5;cursor:not-allowed}
-.login-error{color:var(--danger);font-size:12px;margin-top:12px;text-align:center}
+/* ============================================================
+   AMBIENT BACKGROUND
+   ============================================================ */
+#ambient-bg {
+  position: fixed; inset: 0; z-index: 0;
+  pointer-events: none; overflow: hidden;
+}
+#ambient-bg::before {
+  content: ''; position: absolute; inset: -50%;
+  background:
+    radial-gradient(ellipse 60% 50% at 15% 20%, rgba(91,141,239,0.07) 0%, transparent 60%),
+    radial-gradient(ellipse 50% 40% at 80% 15%, rgba(201,169,110,0.06) 0%, transparent 55%),
+    radial-gradient(ellipse 45% 55% at 50% 80%, rgba(92,184,122,0.04) 0%, transparent 50%),
+    radial-gradient(ellipse 70% 60% at 30% 60%, rgba(201,169,110,0.03) 0%, transparent 60%);
+  animation: meshDrift 30s ease-in-out infinite alternate;
+}
+#ambient-bg::after {
+  content: ''; position: absolute; inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  background-size: 200px 200px; opacity: 0.025; mix-blend-mode: overlay;
+}
+@keyframes meshDrift {
+  0% { transform: translate(0,0) scale(1); }
+  33% { transform: translate(2%,-1%) scale(1.02); }
+  66% { transform: translate(-1%,2%) scale(0.98); }
+  100% { transform: translate(1%,-2%) scale(1.01); }
+}
 
-/* LAYOUT */
-#app{display:none;position:relative;z-index:1}
-.layout{display:flex;min-height:100vh}
-.sidebar{width:250px;background:var(--glass);backdrop-filter:blur(40px) saturate(1.4);border-right:1px solid var(--glassBorder);padding:18px 10px;display:flex;flex-direction:column;gap:2px;flex-shrink:0;overflow-y:auto}
-.sidebar-logo{padding:4px 14px 18px;display:flex;align-items:baseline}
-.sidebar-logo span{font-family:'Cormorant Garamond',serif;font-size:24px;font-weight:600;color:var(--gold);letter-spacing:-0.03em}
-.sidebar-logo .dot{width:4px;height:4px;background:var(--gold);border-radius:50%;margin-left:2px;opacity:.6;display:inline-block}
-.nav-item{display:flex;align-items:center;gap:10px;padding:9px 14px;border-radius:var(--rSm);cursor:pointer;transition:all .25s;font-size:13px;color:var(--textMut);border-left:2px solid transparent}
-.nav-item:hover{color:var(--textSec);background:rgba(201,169,110,0.03)}
-.nav-item.active{color:var(--goldLight);background:var(--goldGlow);border-left-color:var(--gold);font-weight:500}
-.nav-item .icon{font-size:15px;opacity:.5;width:20px;text-align:center}
-.nav-item.active .icon{opacity:.9}
-.nav-badge{margin-left:auto;font-size:10px;font-weight:600;padding:2px 8px;border-radius:10px;background:var(--goldGlow);color:var(--gold)}
-.firm-card{margin-top:auto;padding:14px 14px 0;border-top:1px solid var(--glassBorder)}
-.firm-card-inner{padding:12px 14px;border-radius:var(--r);background:linear-gradient(135deg,var(--goldGlow),transparent);border:1px solid rgba(201,169,110,0.06)}
-.firm-card-name{font-family:'Cormorant Garamond',serif;font-size:14px;font-weight:600;color:var(--goldLight)}
-.firm-card-meta{font-size:10.5px;color:var(--textMut);margin-top:2px}
-.logout-btn{display:flex;align-items:center;gap:10px;padding:9px 14px;border-radius:var(--rSm);cursor:pointer;font-size:12px;color:var(--textMut);border:none;background:none;font-family:'Outfit',sans-serif;width:100%;margin-top:8px;transition:color .2s}
-.logout-btn:hover{color:var(--danger)}
+/* ============================================================
+   GLASSMORPHISM
+   ============================================================ */
+.glass {
+  background: rgba(15,23,42,0.6);
+  backdrop-filter: blur(30px) saturate(1.4);
+  -webkit-backdrop-filter: blur(30px) saturate(1.4);
+  border: 1px solid rgba(201,169,110,0.08);
+  border-radius: 12px;
+}
+.glass-strong {
+  background: rgba(20,30,53,0.75);
+  backdrop-filter: blur(30px) saturate(1.4);
+  -webkit-backdrop-filter: blur(30px) saturate(1.4);
+  border: 1px solid rgba(201,169,110,0.12);
+  border-radius: 12px;
+}
 
-.main{flex:1;padding:24px 28px;overflow-y:auto;display:flex;flex-direction:column;gap:20px}
+/* ============================================================
+   LOGIN SCREEN
+   ============================================================ */
+#login-screen {
+  display: none; position: fixed; inset: 0; z-index: 1000;
+  align-items: center; justify-content: center;
+}
+#login-screen.active { display: flex; }
 
-/* TOP BAR */
-.top-bar{display:flex;align-items:center;justify-content:space-between;animation:rise .5s ease both}
-.top-bar .date{font-size:12.5px;color:var(--textMut);margin-bottom:4px}
-.top-bar h1{font-family:'Cormorant Garamond',serif;font-size:30px;font-weight:500;letter-spacing:-0.02em;line-height:1.1}
-.top-bar h1 .name{color:var(--gold)}
-.top-actions{display:flex;gap:8px}
-.btn-outline{display:flex;align-items:center;gap:6px;padding:8px 16px;border-radius:var(--rSm);background:rgba(15,23,42,0.3);border:1px solid var(--glassBorder);color:var(--textSec);font-size:12.5px;font-weight:500;cursor:pointer;font-family:'Outfit',sans-serif;transition:all .3s}
-.btn-outline:hover{border-color:var(--goldGlowStrong)}
+.login-card {
+  width: 100%; max-width: 420px; padding: 48px 40px;
+  text-align: center; position: relative; z-index: 1;
+}
+.login-logo {
+  font-family: var(--font-display); font-size: 2.8rem; font-weight: 600;
+  color: var(--gold); letter-spacing: 0.04em; margin-bottom: 6px;
+}
+.login-subtitle {
+  font-size: 0.85rem; color: var(--text-mut);
+  letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 36px;
+}
 
-/* TRIAGE CARDS */
-.triage-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;animation:rise .5s ease .06s both}
-.alert-card{padding:16px 18px;display:flex;align-items:center;gap:14px}
-.alert-icon{width:42px;height:42px;border-radius:var(--rSm);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
-.alert-count{font-family:'Cormorant Garamond',serif;font-size:28px;font-weight:500;color:var(--text);line-height:1}
-.alert-label{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.06em}
-.alert-detail{font-size:11.5px;color:var(--textMut);margin-top:4px}
+.form-group { margin-bottom: 20px; text-align: left; }
+.form-label {
+  display: block; font-size: 0.78rem; font-weight: 500; color: var(--text-sec);
+  text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 6px;
+}
+.form-input {
+  width: 100%; padding: 12px 16px; background: rgba(6,9,15,0.5);
+  border: 1px solid rgba(201,169,110,0.12); border-radius: 8px;
+  color: var(--text); font-family: var(--font-body); font-size: 0.95rem;
+  outline: none; transition: border-color 0.3s var(--ease), box-shadow 0.3s var(--ease);
+}
+.form-input:focus { border-color: var(--gold); box-shadow: 0 0 0 3px rgba(201,169,110,0.1); }
+.form-input::placeholder { color: var(--text-mut); }
 
-/* MAIN GRID */
-.main-grid{display:grid;grid-template-columns:1fr 380px;gap:18px;animation:rise .5s ease .12s both}
-.section-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
-.section-header span{font-size:14px;font-weight:600;color:var(--text)}
-.section-header .action{font-size:11px;color:var(--gold);cursor:pointer;opacity:.7;padding:4px 10px;border-radius:var(--rSm)}
+.login-error {
+  display: none; padding: 10px 14px; background: var(--danger-dim);
+  border: 1px solid rgba(224,85,85,0.2); border-radius: 8px;
+  color: var(--danger); font-size: 0.85rem; margin-bottom: 16px; text-align: left;
+}
+.login-error.visible { display: block; }
 
-/* CASES TABLE */
-.cases-table{width:100%;border-collapse:collapse}
-.cases-table th{text-align:left;font-size:10px;font-weight:600;color:var(--textMut);text-transform:uppercase;letter-spacing:.1em;padding:0 10px 12px;border-bottom:1px solid var(--glassBorder)}
-.cases-table td{padding:11px 10px;font-size:12.5px;color:var(--textSec)}
-.cases-table tr{cursor:pointer;transition:all .2s;border-left:2px solid transparent}
-.cases-table tr:hover{background:var(--goldGlow)}
-.cases-table tr.bleeding{background:var(--dangerDim);border-left-color:var(--danger)}
-.cases-table tr.stalled{background:var(--warningDim);border-left-color:var(--warning)}
-.case-ref{font-size:12px;font-weight:600;color:var(--text);font-family:'Outfit',monospace;letter-spacing:.02em}
-.lawyer-avatar{display:inline-flex;align-items:center;justify-content:center;width:26px;height:26px;border-radius:50%;font-size:10px;font-weight:600;background:linear-gradient(135deg,var(--raised),var(--surface));border:1px solid var(--glassBorder);color:var(--goldLight)}
+/* Buttons */
+.btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  padding: 12px 24px; border: none; border-radius: 8px;
+  font-family: var(--font-body); font-size: 0.9rem; font-weight: 600;
+  cursor: pointer; transition: all 0.3s var(--ease); text-decoration: none; line-height: 1;
+}
+.btn-primary {
+  background: linear-gradient(135deg, var(--gold), var(--gold-light));
+  color: var(--void); width: 100%; padding: 14px 24px;
+}
+.btn-primary:hover { transform: translateY(-1px); box-shadow: 0 4px 20px rgba(201,169,110,0.25); }
+.btn-primary:active { transform: translateY(0); }
+.btn-primary:disabled { opacity: 0.5; cursor: not-allowed; transform: none; box-shadow: none; }
 
-/* STATUS PILLS */
-.pill{display:inline-flex;align-items:center;gap:5px;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600;letter-spacing:.02em}
-.pill .dot{width:5px;height:5px;border-radius:50%}
-.pill-active{background:var(--successDim);color:var(--success)}.pill-active .dot{background:var(--success)}
-.pill-urgent{background:var(--dangerDim);color:var(--danger)}.pill-urgent .dot{background:var(--danger);box-shadow:0 0 6px rgba(224,85,85,0.3);animation:pulse 2s ease-in-out infinite}
-.pill-in_progress{background:var(--goldGlow);color:var(--gold)}.pill-in_progress .dot{background:var(--gold)}
-.pill-pending{background:var(--blueDim);color:var(--blue)}.pill-pending .dot{background:var(--blue)}
-.pill-completed{background:var(--successDim);color:var(--success)}.pill-completed .dot{background:var(--success)}
+.btn-ghost {
+  background: transparent; color: var(--text-sec);
+  border: 1px solid rgba(201,169,110,0.12); padding: 8px 16px; font-size: 0.82rem;
+}
+.btn-ghost:hover { background: var(--gold-glow); color: var(--gold); border-color: rgba(201,169,110,0.25); }
+.btn-sm { padding: 6px 14px; font-size: 0.8rem; }
 
-/* PROGRESS BAR */
-.progress-wrap{height:4px;background:rgba(255,255,255,0.04);border-radius:10px;overflow:hidden;flex:1}
-.progress-fill{height:100%;border-radius:10px;transition:width .6s ease}
-.progress-container{display:flex;align-items:center;gap:8px;min-width:100px}
-.progress-text{font-size:11px;color:var(--textMut);font-weight:500;min-width:30px}
+.btn-gold {
+  background: linear-gradient(135deg, var(--gold), var(--gold-light));
+  color: var(--void); font-weight: 600;
+}
+.btn-gold:hover { transform: translateY(-1px); box-shadow: 0 4px 16px rgba(201,169,110,0.3); }
 
-/* RIGHT COLUMN */
-.right-col{display:flex;flex-direction:column;gap:18px}
+/* ============================================================
+   APP LAYOUT
+   ============================================================ */
+#app { display: none; position: relative; z-index: 1; min-height: 100vh; }
+#app.active {
+  display: grid;
+  grid-template-columns: var(--sidebar-w) 1fr;
+  grid-template-rows: var(--topbar-h) 1fr;
+  grid-template-areas: "sidebar topbar" "sidebar main";
+}
 
-/* LAWYER CARD */
-.lawyer-row{display:flex;align-items:center;gap:12px;padding:10px 12px;border-radius:var(--r);background:rgba(255,255,255,0.01);border:1px solid rgba(255,255,255,0.015);transition:all .3s}
-.lawyer-row.overloaded{background:var(--warningDim);border-color:rgba(226,176,74,0.1)}
-.lawyer-avatar-lg{width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,var(--raised),var(--surface));display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;color:var(--goldLight);border:1.5px solid var(--glassBorder);flex-shrink:0}
-.lawyer-row.overloaded .lawyer-avatar-lg{border-color:var(--warning)}
-.lawyer-name{font-size:13px;font-weight:500;color:var(--text)}
-.lawyer-stats{display:flex;gap:10px;margin-top:4px}
-.lawyer-stats span{font-size:10.5px;color:var(--textMut)}
-.lawyer-stats .urgent{color:var(--danger)}
-.high-badge{font-size:9px;font-weight:700;padding:1px 5px;border-radius:6px;background:var(--warningDim);color:var(--warning);margin-left:6px}
+/* ============================================================
+   SIDEBAR
+   ============================================================ */
+.sidebar {
+  grid-area: sidebar;
+  background: rgba(11,17,32,0.85);
+  backdrop-filter: blur(30px) saturate(1.4);
+  -webkit-backdrop-filter: blur(30px) saturate(1.4);
+  border-right: 1px solid rgba(201,169,110,0.06);
+  display: flex; flex-direction: column;
+  height: 100vh; position: sticky; top: 0; z-index: 50; overflow-y: auto;
+}
+.sidebar-brand { padding: 24px 24px 20px; border-bottom: 1px solid rgba(201,169,110,0.06); }
+.sidebar-logo {
+  font-family: var(--font-display); font-size: 1.9rem; font-weight: 600;
+  color: var(--gold); letter-spacing: 0.03em;
+}
+.sidebar-tagline {
+  font-size: 0.7rem; color: var(--text-mut);
+  letter-spacing: 0.08em; text-transform: uppercase; margin-top: 2px;
+}
+.sidebar-nav { flex: 1; padding: 16px 0; }
+.nav-section-title {
+  font-size: 0.68rem; font-weight: 600; color: var(--text-mut);
+  text-transform: uppercase; letter-spacing: 0.1em; padding: 12px 24px 6px;
+}
+.nav-item {
+  display: flex; align-items: center; gap: 12px; padding: 10px 24px;
+  color: var(--text-sec); font-size: 0.88rem; font-weight: 400;
+  cursor: pointer; transition: all 0.2s var(--ease);
+  border-left: 3px solid transparent; text-decoration: none; user-select: none;
+}
+.nav-item:hover { color: var(--text); background: rgba(201,169,110,0.04); }
+.nav-item.active { color: var(--gold); background: var(--gold-glow); border-left-color: var(--gold); font-weight: 500; }
+.nav-item svg { width: 18px; height: 18px; flex-shrink: 0; opacity: 0.7; }
+.nav-item.active svg { opacity: 1; }
 
-/* DEADLINE CARD */
-.deadline-row{display:flex;align-items:center;gap:12px;padding:11px 12px;border-radius:var(--r);background:rgba(255,255,255,0.01);border:1px solid rgba(255,255,255,0.015);cursor:pointer;transition:all .3s}
-.deadline-row:hover{border-color:var(--glassBorder)}
-.deadline-date{width:42px;height:42px;border-radius:var(--rSm);display:flex;flex-direction:column;align-items:center;justify-content:center;flex-shrink:0}
-.deadline-date .day{font-size:16px;font-weight:700;color:var(--text);line-height:1}
-.deadline-date .mon{font-size:8px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--textSec);margin-top:1px}
-.deadline-date.critical{background:var(--dangerDim);border:1px solid rgba(224,85,85,0.12)}
-.deadline-date.high{background:var(--goldGlowStrong);border:1px solid rgba(201,169,110,0.1)}
-.deadline-date.normal{background:var(--blueDim);border:1px solid rgba(91,141,239,0.08)}
-.deadline-title{font-size:12px;font-weight:500;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.deadline-meta{font-size:10.5px;color:var(--textMut);margin-top:2px}
-.days-pill{font-size:10px;font-weight:600;padding:3px 8px;border-radius:10px;flex-shrink:0}
-.days-pill.critical{background:var(--dangerDim);color:var(--danger)}
-.days-pill.high{background:var(--warningDim);color:var(--warning)}
-.days-pill.normal{background:var(--blueDim);color:var(--blue)}
+.sidebar-firm { padding: 16px 24px; border-top: 1px solid rgba(201,169,110,0.06); margin-top: auto; }
+.firm-name { font-size: 0.82rem; color: var(--text); font-weight: 500; }
+.firm-plan { font-size: 0.72rem; color: var(--text-mut); text-transform: uppercase; letter-spacing: 0.06em; margin-top: 2px; }
 
-/* LEGEND */
-.legend{display:flex;gap:16px;margin-top:14px;padding-top:12px;border-top:1px solid var(--glassBorder)}
-.legend span{display:flex;align-items:center;gap:5px;font-size:10.5px;color:var(--textMut)}
-.legend .mark{width:8px;height:3px;border-radius:2px}
+.sidebar-logout { padding: 12px 24px 20px; }
+.logout-btn {
+  display: flex; align-items: center; gap: 8px; width: 100%; padding: 10px 16px;
+  background: transparent; border: 1px solid rgba(224,85,85,0.15); border-radius: 8px;
+  color: var(--text-mut); font-family: var(--font-body); font-size: 0.82rem;
+  cursor: pointer; transition: all 0.2s var(--ease);
+}
+.logout-btn:hover { color: var(--danger); background: var(--danger-dim); border-color: rgba(224,85,85,0.3); }
+.logout-btn svg { width: 16px; height: 16px; }
 
-/* MODAL */
-.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:100;align-items:center;justify-content:center;backdrop-filter:blur(4px)}
-.modal-overlay.open{display:flex}
-.modal{width:100%;max-width:560px;max-height:85vh;overflow-y:auto;padding:28px}
-.modal h2{font-family:'Cormorant Garamond',serif;font-size:22px;font-weight:500;color:var(--text);margin-bottom:20px}
-.modal .close{position:absolute;top:16px;right:16px;background:none;border:none;color:var(--textMut);font-size:20px;cursor:pointer}
-.task-item{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid rgba(255,255,255,0.03)}
-.task-item input[type=checkbox]{accent-color:var(--gold);width:16px;height:16px;cursor:pointer}
-.task-item label{font-size:13px;color:var(--textSec);cursor:pointer;flex:1}
-.task-item.done label{text-decoration:line-through;opacity:.5}
-.case-detail-header{display:flex;align-items:center;gap:12px;margin-bottom:20px}
-.case-detail-header .pill{font-size:10px}
+/* ============================================================
+   TOPBAR
+   ============================================================ */
+.topbar {
+  grid-area: topbar; display: flex; align-items: center; justify-content: space-between;
+  padding: 0 32px; background: rgba(11,17,32,0.6);
+  backdrop-filter: blur(20px) saturate(1.2); -webkit-backdrop-filter: blur(20px) saturate(1.2);
+  border-bottom: 1px solid rgba(201,169,110,0.04);
+  position: sticky; top: 0; z-index: 40;
+}
+.topbar-left { display: flex; flex-direction: column; }
+.topbar-greeting { font-family: var(--font-display); font-size: 1.5rem; font-weight: 500; color: var(--text); }
+.topbar-date { font-size: 0.78rem; color: var(--text-mut); margin-top: 1px; }
+.topbar-actions { display: flex; align-items: center; gap: 10px; }
 
-/* LOADING */
-.loading{display:flex;align-items:center;justify-content:center;padding:40px;color:var(--textMut);font-size:13px}
+/* ============================================================
+   MAIN CONTENT
+   ============================================================ */
+.main-content { grid-area: main; padding: 28px 32px; overflow-y: auto; max-height: calc(100vh - var(--topbar-h)); }
+
+/* ============================================================
+   DASHBOARD GRID
+   ============================================================ */
+.dashboard-grid { display: grid; grid-template-columns: 1fr 340px; gap: 24px; }
+.dashboard-left { display: flex; flex-direction: column; gap: 24px; }
+.dashboard-right { display: flex; flex-direction: column; gap: 24px; }
+
+/* ============================================================
+   TRIAGE CARDS
+   ============================================================ */
+.triage-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
+.triage-card {
+  padding: 20px; position: relative; overflow: hidden;
+  transition: transform 0.3s var(--ease), box-shadow 0.3s var(--ease);
+}
+.triage-card:hover { transform: translateY(-2px); box-shadow: 0 8px 30px rgba(0,0,0,0.2); }
+.triage-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px; }
+.triage-card.bleeding::before { background: linear-gradient(90deg, var(--danger), transparent); }
+.triage-card.stalled::before { background: linear-gradient(90deg, var(--warning), transparent); }
+.triage-card.overloaded::before { background: linear-gradient(90deg, var(--blue), transparent); }
+.triage-card.active-total::before { background: linear-gradient(90deg, var(--success), transparent); }
+
+.triage-icon { width: 36px; height: 36px; border-radius: 8px; display: flex; align-items: center; justify-content: center; margin-bottom: 12px; }
+.triage-icon svg { width: 18px; height: 18px; }
+.triage-card.bleeding .triage-icon { background: var(--danger-dim); color: var(--danger); }
+.triage-card.stalled .triage-icon { background: var(--warning-dim); color: var(--warning); }
+.triage-card.overloaded .triage-icon { background: var(--blue-dim); color: var(--blue); }
+.triage-card.active-total .triage-icon { background: var(--success-dim); color: var(--success); }
+
+.triage-value { font-family: var(--font-display); font-size: 2.2rem; font-weight: 600; line-height: 1; margin-bottom: 4px; }
+.triage-card.bleeding .triage-value { color: var(--danger); }
+.triage-card.stalled .triage-value { color: var(--warning); }
+.triage-card.overloaded .triage-value { color: var(--blue); }
+.triage-card.active-total .triage-value { color: var(--success); }
+.triage-label { font-size: 0.78rem; color: var(--text-mut); font-weight: 500; text-transform: uppercase; letter-spacing: 0.04em; }
+
+/* ============================================================
+   CASES TABLE
+   ============================================================ */
+.section-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
+.section-title { font-family: var(--font-display); font-size: 1.3rem; font-weight: 600; color: var(--text); }
+.section-count { font-size: 0.78rem; color: var(--text-mut); font-weight: 400; margin-left: 8px; }
+.cases-table-wrap { overflow-x: auto; border-radius: 12px; }
+.cases-table { width: 100%; border-collapse: collapse; }
+.cases-table thead th {
+  padding: 12px 16px; font-size: 0.72rem; font-weight: 600;
+  text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-mut);
+  text-align: left; border-bottom: 1px solid rgba(201,169,110,0.06); white-space: nowrap;
+}
+.cases-table tbody tr {
+  cursor: pointer; transition: background 0.2s var(--ease);
+  border-bottom: 1px solid rgba(201,169,110,0.04);
+}
+.cases-table tbody tr:hover { background: rgba(201,169,110,0.04); }
+.cases-table tbody tr:last-child { border-bottom: none; }
+.cases-table td { padding: 14px 16px; font-size: 0.88rem; vertical-align: middle; white-space: nowrap; }
+
+.case-ref { font-family: var(--font-body); font-size: 0.78rem; font-weight: 600; color: var(--gold); letter-spacing: 0.02em; }
+.case-client { color: var(--text); font-weight: 500; }
+.case-type { color: var(--text-sec); font-size: 0.82rem; text-transform: capitalize; }
+
+.avatar {
+  width: 30px; height: 30px; border-radius: 50%;
+  display: inline-flex; align-items: center; justify-content: center;
+  font-size: 0.68rem; font-weight: 700; color: var(--void);
+  background: linear-gradient(135deg, var(--gold), var(--gold-light)); flex-shrink: 0;
+}
+.avatar-sm { width: 26px; height: 26px; font-size: 0.62rem; }
+
+.progress-bar { width: 80px; height: 6px; background: rgba(201,169,110,0.08); border-radius: 3px; overflow: hidden; }
+.progress-fill { height: 100%; border-radius: 3px; background: linear-gradient(90deg, var(--gold), var(--gold-light)); transition: width 0.5s var(--ease); }
+.progress-text { font-size: 0.72rem; color: var(--text-mut); margin-top: 2px; }
+
+.status-pill {
+  display: inline-block; padding: 4px 10px; border-radius: 20px;
+  font-size: 0.72rem; font-weight: 600; letter-spacing: 0.02em; text-transform: capitalize;
+}
+.status-pill.active, .status-pill.in_progress { background: var(--success-dim); color: var(--success); }
+.status-pill.urgent { background: var(--danger-dim); color: var(--danger); animation: pulseGlow 2s ease-in-out infinite; }
+.status-pill.review { background: var(--gold-glow); color: var(--gold); }
+.status-pill.pending { background: var(--blue-dim); color: var(--blue); }
+.status-pill.completed { background: var(--success-dim); color: var(--success); }
+@keyframes pulseGlow {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(224,85,85,0.3); }
+  50% { box-shadow: 0 0 8px 2px rgba(224,85,85,0.2); }
+}
+
+.row-bleeding { border-left: 3px solid var(--danger) !important; }
+.row-stalled { border-left: 3px solid var(--warning) !important; }
+.case-deadline { font-size: 0.82rem; color: var(--text-sec); }
+.case-deadline.overdue { color: var(--danger); font-weight: 600; }
+
+/* ============================================================
+   TEAM WORKLOAD CARD
+   ============================================================ */
+.card-title { font-family: var(--font-display); font-size: 1.15rem; font-weight: 600; color: var(--text); padding: 18px 20px 0; }
+.team-list { padding: 14px 20px 20px; display: flex; flex-direction: column; gap: 14px; }
+.team-member { display: flex; align-items: center; gap: 12px; }
+.team-info { flex: 1; min-width: 0; }
+.team-name { font-size: 0.85rem; font-weight: 500; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.team-stats { display: flex; align-items: center; gap: 10px; font-size: 0.72rem; color: var(--text-mut); margin-top: 2px; }
+.team-stat-active { color: var(--text-sec); }
+.team-stat-urgent { color: var(--danger); }
+.team-progress { width: 60px; height: 4px; background: rgba(201,169,110,0.08); border-radius: 2px; overflow: hidden; }
+.team-progress-fill { height: 100%; border-radius: 2px; background: var(--gold); transition: width 0.5s var(--ease); }
+.badge-high { padding: 2px 8px; background: var(--danger-dim); color: var(--danger); font-size: 0.65rem; font-weight: 700; border-radius: 4px; letter-spacing: 0.04em; }
+
+/* ============================================================
+   DEADLINES CARD
+   ============================================================ */
+.deadline-list { padding: 14px 20px 20px; display: flex; flex-direction: column; gap: 12px; }
+.deadline-item { display: flex; align-items: flex-start; gap: 12px; }
+.deadline-date-badge {
+  flex-shrink: 0; width: 44px; text-align: center; padding: 6px 0;
+  background: var(--gold-glow); border: 1px solid rgba(201,169,110,0.1); border-radius: 8px;
+}
+.deadline-day { font-family: var(--font-display); font-size: 1.2rem; font-weight: 700; color: var(--gold); line-height: 1; }
+.deadline-month { font-size: 0.6rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-mut); margin-top: 1px; }
+.deadline-info { flex: 1; min-width: 0; }
+.deadline-title-text { font-size: 0.85rem; font-weight: 500; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.deadline-case-ref { font-size: 0.72rem; color: var(--text-mut); margin-top: 1px; }
+.days-pill { flex-shrink: 0; padding: 3px 8px; border-radius: 12px; font-size: 0.68rem; font-weight: 600; white-space: nowrap; align-self: center; }
+.days-pill.soon { background: var(--danger-dim); color: var(--danger); }
+.days-pill.mid { background: var(--warning-dim); color: var(--warning); }
+.days-pill.ok { background: var(--success-dim); color: var(--success); }
+
+/* ============================================================
+   LOADING & ERROR STATES
+   ============================================================ */
+.loading-spinner { display: flex; align-items: center; justify-content: center; padding: 60px 0; }
+.spinner { width: 32px; height: 32px; border: 3px solid rgba(201,169,110,0.15); border-top-color: var(--gold); border-radius: 50%; animation: spin 0.8s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+.error-banner { padding: 14px 20px; background: var(--danger-dim); border: 1px solid rgba(224,85,85,0.15); border-radius: 10px; color: var(--danger); font-size: 0.88rem; display: flex; align-items: center; gap: 10px; }
+.error-banner svg { flex-shrink: 0; width: 18px; height: 18px; }
+.empty-state { padding: 40px; text-align: center; color: var(--text-mut); font-size: 0.88rem; }
+
+/* ============================================================
+   MODAL
+   ============================================================ */
+.modal-overlay {
+  display: none; position: fixed; inset: 0; background: rgba(6,9,15,0.75);
+  backdrop-filter: blur(8px); z-index: 1000;
+  align-items: center; justify-content: center; padding: 20px;
+}
+.modal-overlay.active { display: flex; }
+.modal {
+  width: 100%; max-width: 600px; max-height: 85vh; overflow-y: auto;
+  padding: 32px; position: relative; animation: modalIn 0.3s var(--ease);
+}
+@keyframes modalIn {
+  from { opacity: 0; transform: translateY(20px) scale(0.97); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+.modal-close {
+  position: absolute; top: 16px; right: 16px; width: 32px; height: 32px;
+  display: flex; align-items: center; justify-content: center;
+  background: transparent; border: 1px solid rgba(201,169,110,0.1); border-radius: 6px;
+  color: var(--text-mut); cursor: pointer; transition: all 0.2s var(--ease);
+}
+.modal-close:hover { color: var(--text); background: rgba(201,169,110,0.06); }
+.modal-title { font-family: var(--font-display); font-size: 1.6rem; font-weight: 600; color: var(--text); margin-bottom: 4px; padding-right: 40px; }
+.modal-subtitle { font-size: 0.82rem; color: var(--text-mut); margin-bottom: 24px; }
+
+/* Case detail */
+.detail-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 24px; }
+.detail-field label { display: block; font-size: 0.72rem; font-weight: 600; color: var(--text-mut); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 4px; }
+.detail-field span { font-size: 0.9rem; color: var(--text); }
+
+.task-checklist { margin-bottom: 24px; }
+.task-checklist-title { font-size: 0.82rem; font-weight: 600; color: var(--text-sec); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 12px; }
+.task-item {
+  display: flex; align-items: center; gap: 10px; padding: 10px 14px;
+  border-radius: 8px; margin-bottom: 6px; cursor: pointer;
+  transition: background 0.2s var(--ease); user-select: none;
+}
+.task-item:hover { background: rgba(201,169,110,0.04); }
+.task-checkbox {
+  width: 20px; height: 20px; border-radius: 5px;
+  border: 2px solid rgba(201,169,110,0.2);
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0; transition: all 0.2s var(--ease);
+}
+.task-item.done .task-checkbox { background: var(--gold); border-color: var(--gold); }
+.task-item.done .task-checkbox svg { display: block; }
+.task-item .task-checkbox svg { display: none; }
+.task-label { font-size: 0.88rem; color: var(--text); flex: 1; }
+.task-item.done .task-label { text-decoration: line-through; color: var(--text-mut); }
+.task-item.loading { opacity: 0.5; pointer-events: none; }
+
+.detail-progress { margin-bottom: 24px; }
+.detail-progress-label { display: flex; justify-content: space-between; font-size: 0.78rem; color: var(--text-mut); margin-bottom: 6px; }
+.detail-progress-bar { width: 100%; height: 8px; background: rgba(201,169,110,0.08); border-radius: 4px; overflow: hidden; }
+.detail-progress-fill { height: 100%; background: linear-gradient(90deg, var(--gold), var(--gold-light)); border-radius: 4px; transition: width 0.5s var(--ease); }
+
+.detail-notes { margin-bottom: 16px; }
+.detail-notes label { display: block; font-size: 0.72rem; font-weight: 600; color: var(--text-mut); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 6px; }
+.detail-notes p { font-size: 0.88rem; color: var(--text-sec); line-height: 1.6; padding: 12px 16px; background: rgba(6,9,15,0.3); border-radius: 8px; min-height: 60px; }
+
+/* Create case form */
+.form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.form-select {
+  width: 100%; padding: 12px 16px; background: rgba(6,9,15,0.5);
+  border: 1px solid rgba(201,169,110,0.12); border-radius: 8px;
+  color: var(--text); font-family: var(--font-body); font-size: 0.95rem;
+  outline: none; transition: border-color 0.3s var(--ease), box-shadow 0.3s var(--ease);
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%239BA4B8' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+  background-repeat: no-repeat; background-position: right 14px center; padding-right: 36px;
+}
+.form-select:focus { border-color: var(--gold); box-shadow: 0 0 0 3px rgba(201,169,110,0.1); }
+.form-select option { background: var(--deep); color: var(--text); }
+.form-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 24px; }
+.form-error { display: none; padding: 10px 14px; background: var(--danger-dim); border: 1px solid rgba(224,85,85,0.2); border-radius: 8px; color: var(--danger); font-size: 0.82rem; margin-bottom: 16px; }
+.form-error.visible { display: block; }
+
+/* Search */
+.search-bar { position: relative; margin-bottom: 16px; }
+.search-input {
+  width: 100%; padding: 10px 16px 10px 40px; background: rgba(6,9,15,0.3);
+  border: 1px solid rgba(201,169,110,0.08); border-radius: 8px;
+  color: var(--text); font-family: var(--font-body); font-size: 0.88rem;
+  outline: none; transition: border-color 0.3s var(--ease);
+}
+.search-input:focus { border-color: rgba(201,169,110,0.2); }
+.search-input::placeholder { color: var(--text-mut); }
+.search-icon { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: var(--text-mut); width: 16px; height: 16px; }
+
+/* Filter pills */
+.filter-row { display: flex; gap: 8px; margin-bottom: 16px; flex-wrap: wrap; }
+.filter-pill {
+  padding: 6px 14px; border-radius: 20px; font-size: 0.78rem; font-weight: 500;
+  color: var(--text-sec); background: rgba(201,169,110,0.04);
+  border: 1px solid rgba(201,169,110,0.08); cursor: pointer; transition: all 0.2s var(--ease);
+}
+.filter-pill:hover { background: rgba(201,169,110,0.08); color: var(--text); }
+.filter-pill.active { background: var(--gold-glow); border-color: rgba(201,169,110,0.2); color: var(--gold); }
+
+/* Animations */
+.fade-in { animation: fadeIn 0.4s var(--ease); }
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* ============================================================
+   RESPONSIVE
+   ============================================================ */
+@media (max-width: 1100px) {
+  .dashboard-grid { grid-template-columns: 1fr; }
+  .dashboard-right { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+}
+@media (max-width: 900px) {
+  :root { --sidebar-w: 220px; }
+  .triage-row { grid-template-columns: repeat(2, 1fr); }
+}
+@media (max-width: 768px) {
+  #app.active { grid-template-columns: 1fr; grid-template-areas: "topbar" "main"; }
+  .sidebar { display: none; }
+  .main-content { padding: 20px 16px; }
+  .triage-row { grid-template-columns: 1fr 1fr; }
+  .dashboard-right { grid-template-columns: 1fr; }
+  .form-row { grid-template-columns: 1fr; }
+  .detail-grid { grid-template-columns: 1fr; }
+  .modal { padding: 24px 20px; }
+}
 </style>
 </head>
 <body>
 
-<div class="bg-atmosphere"><div class="bg-mesh"></div><div class="bg-orb bg-orb-1"></div><div class="bg-orb bg-orb-2"></div></div>
-<div class="bg-noise"></div>
+<!-- Ambient background mesh -->
+<div id="ambient-bg"></div>
 
-<!-- LOGIN -->
-<div id="login-screen">
-<div class="glass login-card">
-  <h1>Counsel<span class="dot"></span></h1>
-  <p>Case management for UK law firms</p>
-  <form id="login-form">
-    <div class="form-group"><label>Email</label><input type="email" id="login-email" placeholder="you@firm.co.uk" required></div>
-    <div class="form-group"><label>Password</label><input type="password" id="login-pass" placeholder="Enter password" required></div>
-    <button type="submit" class="btn-gold" id="login-btn">Sign in</button>
-    <div class="login-error" id="login-error"></div>
-  </form>
-</div>
+<!-- LOGIN SCREEN -->
+<div id="login-screen" class="active">
+  <div class="login-card glass-strong">
+    <div class="login-logo">Counsel</div>
+    <div class="login-subtitle">Case Management Platform</div>
+    <div id="login-error" class="login-error"></div>
+    <form id="login-form" autocomplete="on">
+      <div class="form-group">
+        <label class="form-label" for="login-email">Email</label>
+        <input class="form-input" type="email" id="login-email" name="email" placeholder="you@yourfirm.co.uk" required autocomplete="email">
+      </div>
+      <div class="form-group">
+        <label class="form-label" for="login-password">Password</label>
+        <input class="form-input" type="password" id="login-password" name="password" placeholder="Enter your password" required autocomplete="current-password">
+      </div>
+      <button class="btn btn-primary" type="submit" id="login-submit">
+        <span id="login-btn-text">Sign In</span>
+      </button>
+    </form>
+  </div>
 </div>
 
-<!-- APP -->
+<!-- APP SHELL -->
 <div id="app">
-<div class="layout">
-  <nav class="sidebar" id="sidebar"></nav>
-  <main class="main" id="main-content"></main>
-</div>
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <div class="sidebar-brand">
+      <div class="sidebar-logo">Counsel</div>
+      <div class="sidebar-tagline">Case Management</div>
+    </div>
+    <nav class="sidebar-nav">
+      <div class="nav-section-title">Main</div>
+      <a class="nav-item active" data-page="dashboard">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+        Dashboard
+      </a>
+      <a class="nav-item" data-page="cases">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+        Cases
+      </a>
+      <a class="nav-item" data-page="clients">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+        Clients
+      </a>
+      <a class="nav-item" data-page="documents">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+        Documents
+      </a>
+      <div class="nav-section-title" style="margin-top:8px;">Schedule</div>
+      <a class="nav-item" data-page="calendar">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+        Calendar
+      </a>
+      <a class="nav-item" data-page="deadlines">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+        Deadlines
+      </a>
+      <div class="nav-section-title" style="margin-top:8px;">Admin</div>
+      <a class="nav-item" data-page="billing">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
+        Billing
+      </a>
+      <a class="nav-item" data-page="lawyers">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+        Lawyers
+      </a>
+      <a class="nav-item" data-page="analytics">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+        Analytics
+      </a>
+      <a class="nav-item" data-page="compliance">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+        Compliance
+      </a>
+    </nav>
+    <div class="sidebar-firm">
+      <div class="firm-name" id="firm-name">--</div>
+      <div class="firm-plan" id="firm-plan">--</div>
+    </div>
+    <div class="sidebar-logout">
+      <button class="logout-btn" id="logout-btn">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+        Sign Out
+      </button>
+    </div>
+  </aside>
+
+  <!-- Top bar -->
+  <header class="topbar">
+    <div class="topbar-left">
+      <div class="topbar-greeting" id="topbar-greeting">Good morning</div>
+      <div class="topbar-date" id="topbar-date"></div>
+    </div>
+    <div class="topbar-actions">
+      <button class="btn btn-ghost btn-sm" id="btn-export">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        Export
+      </button>
+      <button class="btn btn-gold btn-sm" id="btn-new-case">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        New Case
+      </button>
+    </div>
+  </header>
+
+  <!-- Main content -->
+  <main class="main-content" id="main-content"></main>
 </div>
 
 <!-- CASE DETAIL MODAL -->
-<div class="modal-overlay" id="case-modal">
-<div class="glass modal" id="case-modal-content" style="position:relative"></div>
+<div class="modal-overlay" id="case-detail-modal">
+  <div class="modal glass-strong" id="case-detail-content"></div>
 </div>
 
-<!-- NEW CASE MODAL -->
-<div class="modal-overlay" id="new-case-modal">
-<div class="glass modal" id="new-case-content" style="position:relative"></div>
-</div>
-
-<script>
-const API = '';
-let token = localStorage.getItem('counsel_token');
-let user = JSON.parse(localStorage.getItem('counsel_user') || 'null');
-
-// API helper
-async function api(method, path, body) {
-  const opts = { method, headers: { 'Content-Type': 'application/json' } };
-  if (token) opts.headers['Authorization'] = `Bearer ${token}`;
-  if (body) opts.body = JSON.stringify(body);
-  const res = await fetch(`${API}${path}`, opts);
-  const data = await res.json().catch(() => ({}));
-  if (res.status === 401 && path !== '/api/auth/login') { logout(); return null; }
-  return { status: res.status, data };
-}
-
-// Months
-const MONTHS = ['','Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-
-// Status pill
-function statusPill(status) {
-  const labels = { pending:'Pending', in_progress:'In Progress', completed:'Done', active:'Active', urgent:'Urgent' };
-  const s = status === 'in_progress' ? 'in_progress' : status;
-  return `<span class="pill pill-${s}"><span class="dot"></span>${labels[s] || s}</span>`;
-}
-
-// Progress bar
-function progressBar(val) {
-  const color = val === 100 ? 'var(--success)' : val >= 50 ? 'var(--gold)' : 'var(--blue)';
-  return `<div class="progress-container"><div class="progress-wrap"><div class="progress-fill" style="width:${val}%;background:${color}"></div></div><span class="progress-text">${val}%</span></div>`;
-}
-
-// Date formatting
-function fmtDate(d) { if(!d)return'TBC'; const p=d.split('-'); return `${parseInt(p[2])} ${MONTHS[parseInt(p[1])]}`; }
-function daysUntil(d) { if(!d)return 999; return Math.ceil((new Date(d)-new Date())/(86400000)); }
-function urgency(days) { return days <= 3 ? 'critical' : days <= 7 ? 'high' : 'normal'; }
-
-// INIT
-function init() {
-  if (token && user) { showApp(); } else { showLogin(); }
-}
-
-function showLogin() {
-  document.getElementById('login-screen').style.display = 'flex';
-  document.getElementById('app').style.display = 'none';
-}
-
-function showApp() {
-  document.getElementById('login-screen').style.display = 'none';
-  document.getElementById('app').style.display = 'block';
-  renderSidebar();
-  loadDashboard();
-}
-
-// LOGIN
-document.getElementById('login-form').addEventListener('submit', async (e) => {
-  e.preventDefault();
-  const btn = document.getElementById('login-btn');
-  const err = document.getElementById('login-error');
-  btn.disabled = true; btn.textContent = 'Signing in...'; err.textContent = '';
-  const email = document.getElementById('login-email').value;
-  const password = document.getElementById('login-pass').value;
-  const res = await api('POST', '/api/auth/login', { email, password });
-  btn.disabled = false; btn.textContent = 'Sign in';
-  if (res.status === 200) {
-    token = res.data.access_token; user = res.data.user;
-    localStorage.setItem('counsel_token', token);
-    localStorage.setItem('counsel_user', JSON.stringify(user));
-    showApp();
-  } else {
-    err.textContent = res.data.error || 'Login failed';
-  }
-});
-
-function logout() {
-  api('POST', '/api/auth/logout').catch(()=>{});
-  token = null; user = null;
-  localStorage.removeItem('counsel_token'); localStorage.removeItem('counsel_user');
-  showLogin();
-}
-
-// SIDEBAR
-function renderSidebar() {
-  const items = [
-    { id:'dashboard', icon:'\u25AB', label:'Dashboard' },
-    { id:'cases', icon:'\uD83D\uDCC1', label:'Cases' },
-    { id:'clients', icon:'\uD83D\uDC64', label:'Clients' },
-    { id:'documents', icon:'\uD83D\uDCC4', label:'Documents' },
-    { id:'calendar', icon:'\uD83D\uDCC5', label:'Calendar' },
-    { id:'deadlines', icon:'\u23F1', label:'Deadlines' },
-    { id:'lawyers', icon:'\u2696', label:'Lawyers' },
-  ];
-  const nav = items.map(i =>
-    `<div class="nav-item ${i.id==='dashboard'?'active':''}" data-view="${i.id}"><span class="icon">${i.icon}</span>${i.label}</div>`
-  ).join('');
-  document.getElementById('sidebar').innerHTML = `
-    <div class="sidebar-logo"><span>Counsel</span><span class="dot"></span></div>
-    ${nav}
-    <div class="firm-card"><div class="firm-card-inner">
-      <div class="firm-card-name">Townsend &amp; Associates</div>
-      <div class="firm-card-meta">Professional · 3 seats</div>
-    </div></div>
-    <button class="logout-btn" onclick="logout()">← Sign out</button>
-  `;
-  document.querySelectorAll('.nav-item').forEach(el => {
-    el.addEventListener('click', () => {
-      document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-      el.classList.add('active');
-      const view = el.dataset.view;
-      if (view === 'dashboard') loadDashboard();
-      else if (view === 'cases') loadCases();
-      else document.getElementById('main-content').innerHTML = `<div class="loading">${el.textContent} — coming soon</div>`;
-    });
-  });
-}
-
-// DASHBOARD
-async function loadDashboard() {
-  const main = document.getElementById('main-content');
-  main.innerHTML = '<div class="loading">Loading dashboard...</div>';
-
-  const [dashRes, casesRes, deadlinesRes] = await Promise.all([
-    api('GET', '/api/dashboard'),
-    api('GET', '/api/cases'),
-    api('GET', '/api/deadlines/upcoming'),
-  ]);
-
-  if (!dashRes || !casesRes) return;
-  const dash = dashRes.data;
-  const cases = casesRes.data.data || [];
-  const deadlines = deadlinesRes?.data?.data || [];
-  const lawyers = dash.lawyers || [];
-  const triage = dash.triage || {};
-
-  const now = new Date();
-  const greeting = now.getHours() < 12 ? 'Good morning' : now.getHours() < 18 ? 'Good afternoon' : 'Good evening';
-  const dateStr = now.toLocaleDateString('en-GB', { weekday:'long', day:'numeric', month:'long', year:'numeric' });
-  const firstName = user?.name?.split(' ')[0] || 'Partner';
-
-  main.innerHTML = `
-    <div class="top-bar">
-      <div>
-        <div class="date">${dateStr}</div>
-        <h1>${greeting}, <span class="name">${firstName}</span></h1>
-      </div>
-      <div class="top-actions">
-        <button class="btn-outline" onclick="openNewCase()">+ New Case</button>
-      </div>
-    </div>
-
-    <div class="triage-grid">
-      ${triageCard('\uD83D\uDD25', triage.bleeding||0, 'Bleeding', 'Deadline <48hrs, tasks incomplete', 'var(--danger)', 'var(--dangerDim)')}
-      ${triageCard('\u23F8', triage.stalled||0, 'Stalled', 'No activity in 7+ days', 'var(--warning)', 'var(--warningDim)')}
-      ${triageCard('\u26A0\uFE0F', lawyers.filter(l=>l.workload?.active_cases>=8).length||0, 'Overloaded', '8+ active cases assigned', 'var(--warning)', 'var(--warningDim)')}
-      ${triageCard('\uD83D\uDCCA', triage.total_active||0, 'Active', 'Across all practice areas', 'var(--gold)', 'var(--goldGlow)')}
-    </div>
-
-    <div class="main-grid">
-      <div class="glass">
-        <div class="section-header"><span>Active Cases — Triage View</span></div>
-        <div style="overflow-x:auto">
-          <table class="cases-table">
-            <thead><tr>
-              <th>Title</th><th>Client</th><th>Type</th><th>Lawyer</th><th>Progress</th><th>Status</th><th>Deadline</th>
-            </tr></thead>
-            <tbody>
-              ${cases.filter(c=>c.status!=='completed').map(c => {
-                const days = daysUntil(c.deadline);
-                const isBleeding = c.deadline && days <= 2 && c.progress < 100;
-                const isStalled = false; // would need updated_at diff
-                return `<tr class="${isBleeding?'bleeding':isStalled?'stalled':''}" onclick="openCase('${c.id}')">
-                  <td class="case-ref">${c.title}</td>
-                  <td>${c.clients?.name || '—'}</td>
-                  <td style="font-size:11.5px;color:var(--textMut)">${c.type}</td>
-                  <td><span class="lawyer-avatar">${c.users?.avatar_initials || '??'}</span></td>
-                  <td>${progressBar(c.progress)}</td>
-                  <td>${statusPill(c.status)}</td>
-                  <td style="font-size:11.5px;color:var(--textMut)">${fmtDate(c.deadline)}</td>
-                </tr>`;
-              }).join('')}
-            </tbody>
-          </table>
+<!-- CREATE CASE MODAL -->
+<div class="modal-overlay" id="create-case-modal">
+  <div class="modal glass-strong">
+    <button class="modal-close" id="create-case-close-btn">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+    </button>
+    <div class="modal-title">New Case</div>
+    <div class="modal-subtitle">Create a new case for your firm</div>
+    <div id="create-case-error" class="form-error"></div>
+    <form id="create-case-form">
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label" for="cc-client">Client</label>
+          <select class="form-select" id="cc-client" required><option value="">Select client...</option></select>
         </div>
-        <div class="legend">
-          <span><span class="mark" style="background:var(--danger)"></span>Bleeding</span>
-          <span><span class="mark" style="background:var(--warning)"></span>Stalled 7d+</span>
+        <div class="form-group">
+          <label class="form-label" for="cc-lawyer">Lawyer</label>
+          <select class="form-select" id="cc-lawyer" required><option value="">Select lawyer...</option></select>
         </div>
       </div>
-
-      <div class="right-col">
-        <div class="glass">
-          <div class="section-header"><span>Team Workload</span></div>
-          <div style="display:flex;flex-direction:column;gap:10px">
-            ${lawyers.map(l => {
-              const wl = l.workload || { active_cases:0, urgent_cases:0 };
-              const over = wl.active_cases >= 8;
-              return `<div class="lawyer-row ${over?'overloaded':''}">
-                <div class="lawyer-avatar-lg">${l.avatar_initials || '??'}</div>
-                <div style="flex:1;min-width:0">
-                  <div class="lawyer-name">${l.name}${over?'<span class="high-badge">HIGH</span>':''}</div>
-                  <div class="lawyer-stats">
-                    <span>${wl.active_cases} active</span>
-                    ${wl.urgent_cases?`<span class="urgent">${wl.urgent_cases} urgent</span>`:''}
-                  </div>
-                </div>
-                <div style="width:50px">${progressBar(Math.min(wl.active_cases/10*100,100))}</div>
-              </div>`;
-            }).join('') || '<div style="color:var(--textMut);font-size:12px;padding:12px">No team members yet</div>'}
-          </div>
+      <div class="form-group">
+        <label class="form-label" for="cc-title">Case Title</label>
+        <input class="form-input" type="text" id="cc-title" placeholder="e.g. Smith v Jones -- Dispute Resolution" required maxlength="200">
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label" for="cc-type">Case Type</label>
+          <select class="form-select" id="cc-type" required>
+            <option value="">Select type...</option>
+            <option value="corporate">Corporate</option>
+            <option value="criminal">Criminal</option>
+            <option value="family">Family</option>
+            <option value="civil">Civil</option>
+            <option value="real_estate">Real Estate</option>
+            <option value="employment">Employment</option>
+            <option value="other">Other</option>
+          </select>
         </div>
-
-        <div class="glass">
-          <div class="section-header"><span>Upcoming Deadlines</span></div>
-          <div style="display:flex;flex-direction:column;gap:8px">
-            ${deadlines.slice(0,4).map(d => {
-              const days = daysUntil(d.date);
-              const urg = urgency(days);
-              const parts = d.date.split('-');
-              return `<div class="deadline-row">
-                <div class="deadline-date ${urg}">
-                  <span class="day">${parseInt(parts[2])}</span>
-                  <span class="mon">${MONTHS[parseInt(parts[1])]}</span>
-                </div>
-                <div style="flex:1;min-width:0">
-                  <div class="deadline-title">${d.title}</div>
-                  <div class="deadline-meta">${d.cases?.title || ''}</div>
-                </div>
-                <span class="days-pill ${urg}">${days}d</span>
-              </div>`;
-            }).join('') || '<div style="color:var(--textMut);font-size:12px;padding:12px">No upcoming deadlines</div>'}
-          </div>
+        <div class="form-group">
+          <label class="form-label" for="cc-priority">Priority</label>
+          <select class="form-select" id="cc-priority">
+            <option value="normal">Normal</option>
+            <option value="high">High</option>
+            <option value="urgent">Urgent</option>
+          </select>
         </div>
       </div>
-    </div>
-  `;
-}
-
-function triageCard(icon, count, label, detail, color, bg) {
-  return `<div class="glass alert-card">
-    <div class="alert-icon" style="background:${bg}">${icon}</div>
-    <div style="flex:1;min-width:0">
-      <div style="display:flex;align-items:baseline;gap:8px">
-        <span class="alert-count">${count}</span>
-        <span class="alert-label" style="color:${color}">${label}</span>
+      <div class="form-group">
+        <label class="form-label" for="cc-deadline">Deadline</label>
+        <input class="form-input" type="date" id="cc-deadline">
       </div>
-      <div class="alert-detail">${detail}</div>
-    </div>
-  </div>`;
-}
-
-// CASE DETAIL
-async function openCase(id) {
-  const modal = document.getElementById('case-modal');
-  const content = document.getElementById('case-modal-content');
-  content.innerHTML = '<div class="loading">Loading...</div>';
-  modal.classList.add('open');
-
-  const res = await api('GET', `/api/cases/${id}`);
-  if (!res || !res.data?.data) { modal.classList.remove('open'); return; }
-  const c = res.data.data;
-  const tasks = c.tasks || [];
-
-  content.innerHTML = `
-    <button class="close" onclick="document.getElementById('case-modal').classList.remove('open')">&times;</button>
-    <div class="case-detail-header">
-      ${statusPill(c.status)}
-      <span style="font-size:11px;color:var(--textMut)">${c.type} · ${fmtDate(c.deadline)}</span>
-    </div>
-    <h2>${c.title}</h2>
-    <div style="font-size:13px;color:var(--textSec);margin-bottom:6px">Client: ${c.clients?.name || '—'} · Lawyer: ${c.users?.name || '—'}</div>
-    <div style="margin:16px 0">${progressBar(c.progress)}</div>
-    <div style="font-size:12px;font-weight:600;color:var(--textMut);text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px">Tasks</div>
-    <div id="task-list">
-      ${tasks.sort((a,b)=>a.order_index-b.order_index).map(t => `
-        <div class="task-item ${t.done?'done':''}">
-          <input type="checkbox" ${t.done?'checked':''} onchange="toggleTask('${t.id}',this.checked,'${id}')">
-          <label>${t.label}</label>
-        </div>
-      `).join('')}
-    </div>
-    ${c.notes ? `<div style="margin-top:16px;font-size:12px;color:var(--textMut)">Notes: ${c.notes}</div>` : ''}
-  `;
-}
-
-async function toggleTask(taskId, done, caseId) {
-  const res = await api('PATCH', `/api/tasks/${taskId}`, { done });
-  if (res?.data) {
-    // Re-open case to refresh
-    openCase(caseId);
-  }
-}
-
-// NEW CASE
-async function openNewCase() {
-  const modal = document.getElementById('new-case-modal');
-  const content = document.getElementById('new-case-content');
-  content.innerHTML = '<div class="loading">Loading...</div>';
-  modal.classList.add('open');
-
-  const clientsRes = await api('GET', '/api/clients');
-  const clients = clientsRes?.data?.data || [];
-
-  content.innerHTML = `
-    <button class="close" onclick="document.getElementById('new-case-modal').classList.remove('open')">&times;</button>
-    <h2>New Case</h2>
-    <form id="new-case-form">
-      <div class="form-group"><label>Title</label><input type="text" id="nc-title" required placeholder="e.g. Commercial Lease Agreement"></div>
-      <div class="form-group"><label>Client</label>
-        <select id="nc-client" style="width:100%;padding:10px 14px;background:rgba(255,255,255,0.03);border:1px solid var(--glassBorder);border-radius:var(--rSm);color:var(--text);font-family:'Outfit',sans-serif;font-size:14px">
-          ${clients.map(cl => `<option value="${cl.id}">${cl.name}</option>`).join('')}
-        </select>
+      <div class="form-group">
+        <label class="form-label" for="cc-notes">Notes (optional)</label>
+        <input class="form-input" type="text" id="cc-notes" placeholder="Brief description or special instructions" maxlength="500">
       </div>
-      <div class="form-group"><label>Type</label>
-        <select id="nc-type" style="width:100%;padding:10px 14px;background:rgba(255,255,255,0.03);border:1px solid var(--glassBorder);border-radius:var(--rSm);color:var(--text);font-family:'Outfit',sans-serif;font-size:14px">
-          <option value="corporate">Corporate</option><option value="criminal">Criminal</option><option value="family">Family</option>
-          <option value="civil">Civil</option><option value="real_estate">Real Estate</option><option value="employment">Employment</option><option value="other">Other</option>
-        </select>
+      <div class="form-actions">
+        <button type="button" class="btn btn-ghost" id="create-case-cancel-btn">Cancel</button>
+        <button type="submit" class="btn btn-gold" id="create-case-submit">Create Case</button>
       </div>
-      <div class="form-group"><label>Priority</label>
-        <select id="nc-priority" style="width:100%;padding:10px 14px;background:rgba(255,255,255,0.03);border:1px solid var(--glassBorder);border-radius:var(--rSm);color:var(--text);font-family:'Outfit',sans-serif;font-size:14px">
-          <option value="normal">Normal</option><option value="high">High</option><option value="urgent">Urgent</option>
-        </select>
-      </div>
-      <div class="form-group"><label>Deadline</label><input type="date" id="nc-deadline" style="color-scheme:dark"></div>
-      <button type="submit" class="btn-gold">Create Case</button>
-      <div class="login-error" id="nc-error"></div>
     </form>
-  `;
+  </div>
+</div>
 
-  document.getElementById('new-case-form').addEventListener('submit', async (e) => {
+<!-- ============================================================
+     APPLICATION JAVASCRIPT
+     ============================================================ -->
+<script>
+(function() {
+  'use strict';
+
+  // ---- Constants ----
+  var API_BASE = '';
+  var TOKEN_KEY = 'counsel_token';
+  var USER_KEY = 'counsel_user';
+
+  var state = {
+    user: null,
+    dashboardData: null,
+    cases: [],
+    filteredCases: [],
+    caseFilter: 'all',
+    searchQuery: '',
+    bleedingIds: {},
+    stalledIds: {}
+  };
+
+  // ---- Safe DOM helpers ----
+  // All user data goes through escapeHtml before being placed in markup strings.
+  function escapeHtml(str) {
+    if (str === null || str === undefined) return '';
+    var s = String(str);
+    var d = document.createElement('div');
+    d.appendChild(document.createTextNode(s));
+    return d.innerHTML;
+  }
+
+  function setText(el, text) { if (el) el.textContent = String(text != null ? text : ''); }
+
+  // setHtml is used only with markup built from escaped user data + static structure.
+  function setHtml(el, html) { if (el) el.innerHTML = html; }
+
+  // ---- API helpers ----
+  function getToken() { return localStorage.getItem(TOKEN_KEY); }
+  function getUser() { try { return JSON.parse(localStorage.getItem(USER_KEY)); } catch(e) { return null; } }
+
+  function authHeaders() {
+    var h = { 'Content-Type': 'application/json' };
+    var t = getToken();
+    if (t) h['Authorization'] = 'Bearer ' + t;
+    return h;
+  }
+
+  async function api(path, opts) {
+    opts = opts || {};
+    var res = await fetch(API_BASE + path, Object.assign({ headers: authHeaders() }, opts));
+    var data; try { data = await res.json(); } catch(e) { data = {}; }
+    if (!res.ok) { var err = new Error(data.error || 'Request failed (' + res.status + ')'); err.status = res.status; err.data = data; throw err; }
+    return data;
+  }
+
+  // ---- Formatters ----
+  function caseRef(id) {
+    if (!id) return 'CNL-0000';
+    return 'CNL-' + id.replace(/\D/g, '').slice(-4).padStart(4, '0');
+  }
+
+  function formatDate(d) {
+    if (!d) return '--';
+    return new Date(d).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+  }
+
+  function daysUntil(d) {
+    if (!d) return null;
+    var now = new Date(); now.setHours(0,0,0,0);
+    var target = new Date(d); target.setHours(0,0,0,0);
+    return Math.ceil((target - now) / 86400000);
+  }
+
+  function greetingText() {
+    var h = new Date().getHours();
+    if (h < 12) return 'Good morning';
+    if (h < 17) return 'Good afternoon';
+    return 'Good evening';
+  }
+
+  function formatToday() {
+    return new Date().toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+  }
+
+  function mkInitials(name) {
+    if (!name) return '?';
+    return name.split(' ').map(function(w) { return w[0]; }).join('').toUpperCase().slice(0,2);
+  }
+
+  function caseTypeLabel(t) {
+    return (t || '').replace(/_/g, ' ').replace(/\b\w/g, function(c) { return c.toUpperCase(); });
+  }
+
+  function deriveStatus(priority, status) {
+    return priority === 'urgent' ? 'urgent' : status;
+  }
+
+  function statusLabel(s) {
+    return (s || '').replace(/_/g, ' ').replace(/\b\w/g, function(c) { return c.toUpperCase(); });
+  }
+
+  // ---- Auth ----
+  var loginScreen = document.getElementById('login-screen');
+  var appShell = document.getElementById('app');
+
+  function showLogin() { loginScreen.classList.add('active'); appShell.classList.remove('active'); }
+  function showApp() {
+    loginScreen.classList.remove('active');
+    appShell.classList.add('active');
+    state.user = getUser();
+    updateTopbar();
+    updateSidebarFirm();
+    loadDashboard();
+  }
+
+  document.getElementById('login-form').addEventListener('submit', async function(e) {
     e.preventDefault();
-    const res = await api('POST', '/api/cases', {
-      title: document.getElementById('nc-title').value,
-      client_id: document.getElementById('nc-client').value,
-      lawyer_id: user.id,
-      type: document.getElementById('nc-type').value,
-      priority: document.getElementById('nc-priority').value,
-      deadline: document.getElementById('nc-deadline').value || undefined,
-    });
-    if (res.status === 201) {
-      document.getElementById('new-case-modal').classList.remove('open');
-      loadDashboard();
-    } else {
-      document.getElementById('nc-error').textContent = res.data?.error || 'Failed to create case';
+    var email = document.getElementById('login-email').value.trim();
+    var password = document.getElementById('login-password').value;
+    if (!email || !password) return;
+
+    var errEl = document.getElementById('login-error');
+    var btn = document.getElementById('login-submit');
+    errEl.classList.remove('visible');
+    btn.disabled = true;
+    setText(document.getElementById('login-btn-text'), 'Signing in...');
+
+    try {
+      var data = await api('/api/auth/login', { method: 'POST', body: JSON.stringify({ email: email, password: password }) });
+      localStorage.setItem(TOKEN_KEY, data.access_token);
+      localStorage.setItem(USER_KEY, JSON.stringify(data.user));
+      showApp();
+    } catch (err) {
+      var msg = 'Invalid email or password.';
+      if (err.status === 429) msg = (err.data && err.data.error) || 'Account locked. Please try again in 30 minutes.';
+      else if (err.data && err.data.error) msg = err.data.error;
+      setText(errEl, msg);
+      errEl.classList.add('visible');
+    } finally {
+      btn.disabled = false;
+      setText(document.getElementById('login-btn-text'), 'Sign In');
     }
   });
-}
 
-// CASES LIST VIEW
-async function loadCases() {
-  const main = document.getElementById('main-content');
-  main.innerHTML = '<div class="loading">Loading cases...</div>';
-  const res = await api('GET', '/api/cases');
-  if (!res) return;
-  const cases = res.data.data || [];
-  main.innerHTML = `
-    <div class="top-bar">
-      <h1 style="font-family:'Cormorant Garamond',serif;font-size:26px">All Cases</h1>
-      <div class="top-actions"><button class="btn-gold" style="width:auto" onclick="openNewCase()">+ New Case</button></div>
-    </div>
-    <div class="glass">
-      <table class="cases-table"><thead><tr>
-        <th>Title</th><th>Client</th><th>Type</th><th>Progress</th><th>Status</th><th>Deadline</th>
-      </tr></thead><tbody>
-        ${cases.map(c => `<tr onclick="openCase('${c.id}')">
-          <td class="case-ref">${c.title}</td>
-          <td>${c.clients?.name||'—'}</td>
-          <td style="font-size:11.5px;color:var(--textMut)">${c.type}</td>
-          <td>${progressBar(c.progress)}</td>
-          <td>${statusPill(c.status)}</td>
-          <td style="font-size:11.5px;color:var(--textMut)">${fmtDate(c.deadline)}</td>
-        </tr>`).join('')}
-      </tbody></table>
-    </div>
-  `;
-}
+  document.getElementById('logout-btn').addEventListener('click', async function() {
+    try { await api('/api/auth/logout', { method: 'POST' }); } catch(e) {}
+    localStorage.removeItem(TOKEN_KEY);
+    localStorage.removeItem(USER_KEY);
+    state = { user: null, dashboardData: null, cases: [], filteredCases: [], caseFilter: 'all', searchQuery: '', bleedingIds: {}, stalledIds: {} };
+    showLogin();
+  });
 
-// Close modals on overlay click
-document.getElementById('case-modal').addEventListener('click', (e) => {
-  if (e.target === e.currentTarget) e.currentTarget.classList.remove('open');
-});
-document.getElementById('new-case-modal').addEventListener('click', (e) => {
-  if (e.target === e.currentTarget) e.currentTarget.classList.remove('open');
-});
+  // ---- Topbar / Sidebar ----
+  function updateTopbar() {
+    var name = (state.user && state.user.name) || 'there';
+    setText(document.getElementById('topbar-greeting'), greetingText() + ', ' + name);
+    setText(document.getElementById('topbar-date'), formatToday());
+  }
 
-// GO
-init();
+  function updateSidebarFirm() {
+    var u = state.user;
+    setText(document.getElementById('firm-name'), (u && u.firm_name) || (u && u.name) || 'My Firm');
+    setText(document.getElementById('firm-plan'), (u && u.plan) || 'Professional');
+  }
+
+  // ---- Navigation ----
+  document.querySelectorAll('.nav-item[data-page]').forEach(function(item) {
+    item.addEventListener('click', function(e) {
+      e.preventDefault();
+      document.querySelectorAll('.nav-item').forEach(function(n) { n.classList.remove('active'); });
+      item.classList.add('active');
+      if (item.dataset.page === 'dashboard') loadDashboard();
+      else renderPlaceholder(item.dataset.page);
+    });
+  });
+
+  function renderPlaceholder(page) {
+    var t = page.charAt(0).toUpperCase() + page.slice(1);
+    setHtml(document.getElementById('main-content'),
+      '<div class="fade-in" style="padding:60px 0;text-align:center;">' +
+        '<div style="font-family:var(--font-display);font-size:2rem;color:var(--text);margin-bottom:8px;">' + escapeHtml(t) + '</div>' +
+        '<div style="color:var(--text-mut);font-size:0.9rem;">This section is coming soon.</div>' +
+      '</div>');
+  }
+
+  // ---- Dashboard ----
+  async function loadDashboard() {
+    var main = document.getElementById('main-content');
+    setHtml(main, '<div class="loading-spinner"><div class="spinner"></div></div>');
+
+    try {
+      var r = await Promise.all([api('/api/dashboard'), api('/api/cases')]);
+      state.dashboardData = r[0];
+      state.cases = r[1].data || [];
+      state.filteredCases = state.cases.slice();
+      state.caseFilter = 'all';
+      state.searchQuery = '';
+      state.bleedingIds = {};
+      state.stalledIds = {};
+      (r[0].bleeding_cases || []).forEach(function(c) { state.bleedingIds[c.id] = true; });
+      (r[0].stalled_cases || []).forEach(function(c) { state.stalledIds[c.id] = true; });
+      renderDashboard();
+    } catch (err) {
+      if (err.status === 401) { localStorage.removeItem(TOKEN_KEY); localStorage.removeItem(USER_KEY); showLogin(); return; }
+      setHtml(main,
+        '<div class="error-banner"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>Failed to load dashboard. ' + escapeHtml(err.message) + '</div>');
+    }
+  }
+
+  function renderDashboard() {
+    var d = state.dashboardData;
+    if (!d) return;
+
+    // Overloaded count
+    var lc = {};
+    state.cases.forEach(function(c) { if (c.status !== 'completed') lc[c.lawyer_id] = (lc[c.lawyer_id] || 0) + 1; });
+    var oc = 0; Object.keys(lc).forEach(function(k) { if (lc[k] >= 8) oc++; });
+
+    setHtml(document.getElementById('main-content'),
+      '<div class="dashboard-grid fade-in">' +
+        '<div class="dashboard-left">' +
+          buildTriageCards(d, oc) +
+          buildCasesSection() +
+        '</div>' +
+        '<div class="dashboard-right">' +
+          '<div class="glass"><div class="card-title">Team Workload</div>' + buildTeamWorkload(d.lawyers || []) + '</div>' +
+          '<div class="glass"><div class="card-title">Upcoming Deadlines</div>' + buildDeadlines(d.upcoming_deadlines || []) + '</div>' +
+        '</div>' +
+      '</div>');
+
+    // Attach search
+    var si = document.getElementById('case-search');
+    if (si) si.addEventListener('input', function(e) { state.searchQuery = e.target.value.toLowerCase(); applyFilters(); });
+
+    // Attach filter pills
+    document.querySelectorAll('#filter-row .filter-pill').forEach(function(p) {
+      p.addEventListener('click', function() {
+        document.querySelectorAll('#filter-row .filter-pill').forEach(function(x) { x.classList.remove('active'); });
+        p.classList.add('active');
+        state.caseFilter = p.dataset.filter;
+        applyFilters();
+      });
+    });
+  }
+
+  function buildTriageCards(d, oc) {
+    function card(cls, iconSvg, val, label) {
+      return '<div class="triage-card glass ' + cls + '"><div class="triage-icon">' + iconSvg + '</div><div class="triage-value">' + escapeHtml(val) + '</div><div class="triage-label">' + escapeHtml(label) + '</div></div>';
+    }
+    return '<div class="triage-row">' +
+      card('bleeding', '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>', d.triage.bleeding, 'Bleeding') +
+      card('stalled', '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><line x1="10" y1="15" x2="10" y2="9"/><line x1="14" y1="15" x2="14" y2="9"/></svg>', d.triage.stalled, 'Stalled') +
+      card('overloaded', '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>', oc, 'Overloaded (8+)') +
+      card('active-total', '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>', d.triage.total_active, 'Total Active') +
+    '</div>';
+  }
+
+  function buildCasesSection() {
+    return '<div>' +
+      '<div class="section-header"><div><span class="section-title">Cases</span><span class="section-count">' + escapeHtml(state.cases.length) + ' total</span></div></div>' +
+      '<div class="search-bar"><svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><input class="search-input" type="text" placeholder="Search cases by title..." id="case-search"></div>' +
+      '<div class="filter-row" id="filter-row"><span class="filter-pill active" data-filter="all">All</span><span class="filter-pill" data-filter="pending">Pending</span><span class="filter-pill" data-filter="in_progress">In Progress</span><span class="filter-pill" data-filter="completed">Completed</span><span class="filter-pill" data-filter="urgent">Urgent</span></div>' +
+      '<div class="cases-table-wrap glass" id="cases-table-wrap">' + buildCasesTable(state.filteredCases) + '</div>' +
+    '</div>';
+  }
+
+  function applyFilters() {
+    var f = state.cases.slice();
+    if (state.caseFilter !== 'all') {
+      if (state.caseFilter === 'urgent') f = f.filter(function(c) { return c.priority === 'urgent'; });
+      else f = f.filter(function(c) { return c.status === state.caseFilter; });
+    }
+    if (state.searchQuery) {
+      var q = state.searchQuery;
+      f = f.filter(function(c) {
+        return (c.title || '').toLowerCase().indexOf(q) !== -1 ||
+          ((c.clients && c.clients.name) || '').toLowerCase().indexOf(q) !== -1 ||
+          caseRef(c.id).toLowerCase().indexOf(q) !== -1;
+      });
+    }
+    state.filteredCases = f;
+    var w = document.getElementById('cases-table-wrap');
+    if (w) setHtml(w, buildCasesTable(f));
+  }
+
+  function buildCasesTable(cases) {
+    if (!cases.length) return '<div class="empty-state">No cases found.</div>';
+
+    var rows = cases.map(function(c) {
+      var rc = state.bleedingIds[c.id] ? 'row-bleeding' : (state.stalledIds[c.id] ? 'row-stalled' : '');
+      var ds = deriveStatus(c.priority, c.status);
+      var dl = c.deadline ? daysUntil(c.deadline) : null;
+      var dc = (dl !== null && dl < 0) ? 'overdue' : '';
+      var ln = (c.users && c.users.name) || 'Unassigned';
+      var li = (c.users && c.users.avatar_initials) || mkInitials(ln);
+
+      return '<tr class="' + rc + '" data-case-id="' + escapeHtml(c.id) + '">' +
+        '<td><span class="case-ref">' + escapeHtml(caseRef(c.id)) + '</span></td>' +
+        '<td><span class="case-client">' + escapeHtml((c.clients && c.clients.name) || '--') + '</span></td>' +
+        '<td><span class="case-type">' + escapeHtml(caseTypeLabel(c.type)) + '</span></td>' +
+        '<td><span class="avatar avatar-sm" title="' + escapeHtml(ln) + '">' + escapeHtml(li) + '</span></td>' +
+        '<td><div class="progress-bar"><div class="progress-fill" style="width:' + (c.progress || 0) + '%"></div></div><div class="progress-text">' + escapeHtml(c.progress || 0) + '%</div></td>' +
+        '<td><span class="status-pill ' + escapeHtml(ds) + '">' + escapeHtml(statusLabel(ds)) + '</span></td>' +
+        '<td><span class="case-deadline ' + dc + '">' + (c.deadline ? escapeHtml(formatDate(c.deadline)) : '--') + '</span></td>' +
+      '</tr>';
+    }).join('');
+
+    return '<table class="cases-table"><thead><tr><th>Ref</th><th>Client</th><th>Type</th><th>Lawyer</th><th>Progress</th><th>Status</th><th>Deadline</th></tr></thead><tbody>' + rows + '</tbody></table>';
+  }
+
+  // Click delegation for case rows
+  document.addEventListener('click', function(e) {
+    var row = e.target.closest('tr[data-case-id]');
+    if (row) openCaseDetail(row.dataset.caseId);
+  });
+
+  function buildTeamWorkload(lawyers) {
+    if (!lawyers.length) return '<div class="team-list"><div class="empty-state" style="padding:20px;">No team data available.</div></div>';
+
+    var lc = {};
+    state.cases.forEach(function(c) {
+      if (!lc[c.lawyer_id]) lc[c.lawyer_id] = { active: 0, urgent: 0 };
+      if (c.status !== 'completed') { lc[c.lawyer_id].active++; if (c.priority === 'urgent') lc[c.lawyer_id].urgent++; }
+    });
+
+    var items = lawyers.map(function(l) {
+      var w = lc[l.id] || { active: 0, urgent: 0 };
+      var pct = Math.min(w.active * 12.5, 100);
+      var over = w.active >= 8;
+      var av = l.avatar_initials || mkInitials(l.name);
+      return '<div class="team-member">' +
+        '<span class="avatar avatar-sm">' + escapeHtml(av) + '</span>' +
+        '<div class="team-info"><div class="team-name">' + escapeHtml(l.name) + '</div>' +
+        '<div class="team-stats"><span class="team-stat-active">' + escapeHtml(w.active) + ' active</span>' +
+        (w.urgent > 0 ? '<span class="team-stat-urgent">' + escapeHtml(w.urgent) + ' urgent</span>' : '') +
+        '</div></div>' +
+        '<div class="team-progress"><div class="team-progress-fill" style="width:' + pct + '%;' + (over ? 'background:var(--danger);' : '') + '"></div></div>' +
+        (over ? '<span class="badge-high">HIGH</span>' : '') +
+      '</div>';
+    }).join('');
+
+    return '<div class="team-list">' + items + '</div>';
+  }
+
+  function buildDeadlines(deadlines) {
+    if (!deadlines.length) return '<div class="deadline-list"><div class="empty-state" style="padding:20px;">No upcoming deadlines.</div></div>';
+
+    var months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    var items = deadlines.slice(0, 4).map(function(dl) {
+      var dt = new Date(dl.date);
+      var day = dt.getDate(), mon = months[dt.getMonth()];
+      var days = daysUntil(dl.date);
+      var pc = 'ok', pt = days + 'd';
+      if (days <= 0) { pc = 'soon'; pt = days === 0 ? 'Today' : Math.abs(days) + 'd ago'; }
+      else if (days <= 2) { pc = 'soon'; pt = days + 'd'; }
+      else if (days <= 7) { pc = 'mid'; }
+
+      var ct = (dl.cases && dl.cases.title) || dl.title || 'Deadline';
+      var ci = dl.case_id;
+
+      return '<div class="deadline-item">' +
+        '<div class="deadline-date-badge"><div class="deadline-day">' + escapeHtml(day) + '</div><div class="deadline-month">' + escapeHtml(mon) + '</div></div>' +
+        '<div class="deadline-info"><div class="deadline-title-text">' + escapeHtml(dl.title) + '</div>' +
+        '<div class="deadline-case-ref">' + (ci ? escapeHtml(caseRef(ci)) : '') + (ct !== dl.title ? ' - ' + escapeHtml(ct) : '') + '</div></div>' +
+        '<span class="days-pill ' + pc + '">' + escapeHtml(pt) + '</span>' +
+      '</div>';
+    }).join('');
+
+    return '<div class="deadline-list">' + items + '</div>';
+  }
+
+  // ---- Case Detail Modal ----
+  var detailModal = document.getElementById('case-detail-modal');
+  var detailContent = document.getElementById('case-detail-content');
+
+  function closeBtn() {
+    return '<button class="modal-close" id="detail-close-btn"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>';
+  }
+
+  function attachDetailClose() {
+    var b = document.getElementById('detail-close-btn');
+    if (b) b.addEventListener('click', function() { detailModal.classList.remove('active'); });
+  }
+
+  async function openCaseDetail(caseId) {
+    detailModal.classList.add('active');
+    setHtml(detailContent, closeBtn() + '<div class="loading-spinner"><div class="spinner"></div></div>');
+    attachDetailClose();
+
+    try {
+      var res = await api('/api/cases/' + encodeURIComponent(caseId));
+      var c = res.data;
+      if (!c) throw new Error('Case not found');
+
+      var tasks = (c.tasks || []).sort(function(a, b) { return a.order_index - b.order_index; });
+      var ds = deriveStatus(c.priority, c.status);
+      var ln = (c.users && c.users.name) || 'Unassigned';
+      var doneCount = tasks.filter(function(t) { return t.done; }).length;
+
+      var taskHtml = tasks.map(function(t) {
+        return '<div class="task-item ' + (t.done ? 'done' : '') + '" data-task-id="' + escapeHtml(t.id) + '" data-done="' + (t.done ? '1' : '0') + '">' +
+          '<div class="task-checkbox"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--void)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></div>' +
+          '<span class="task-label">' + escapeHtml(t.label) + '</span>' +
+        '</div>';
+      }).join('');
+
+      setHtml(detailContent, closeBtn() +
+        '<div class="modal-title">' + escapeHtml(c.title) + '</div>' +
+        '<div class="modal-subtitle">' + escapeHtml(caseRef(c.id)) + ' &middot; ' + escapeHtml((c.clients && c.clients.name) || '--') + '</div>' +
+        '<div class="detail-grid">' +
+          '<div class="detail-field"><label>Lawyer</label><span>' + escapeHtml(ln) + '</span></div>' +
+          '<div class="detail-field"><label>Status</label><span><span class="status-pill ' + escapeHtml(ds) + '">' + escapeHtml(statusLabel(ds)) + '</span></span></div>' +
+          '<div class="detail-field"><label>Priority</label><span style="text-transform:capitalize;">' + escapeHtml(c.priority || 'Normal') + '</span></div>' +
+          '<div class="detail-field"><label>Deadline</label><span>' + (c.deadline ? escapeHtml(formatDate(c.deadline)) : 'None set') + '</span></div>' +
+          '<div class="detail-field"><label>Type</label><span>' + escapeHtml(caseTypeLabel(c.type)) + '</span></div>' +
+          '<div class="detail-field"><label>Client Contact</label><span>' + escapeHtml((c.clients && c.clients.email) || '--') + '</span></div>' +
+        '</div>' +
+        '<div class="detail-progress"><div class="detail-progress-label"><span>Progress</span><span id="detail-progress-pct">' + escapeHtml(c.progress || 0) + '%</span></div>' +
+          '<div class="detail-progress-bar"><div class="detail-progress-fill" id="detail-progress-fill" style="width:' + (c.progress || 0) + '%"></div></div></div>' +
+        '<div class="task-checklist"><div class="task-checklist-title" id="task-checklist-title">Task Checklist (' + doneCount + '/' + tasks.length + ')</div><div id="task-list">' + taskHtml + '</div></div>' +
+        (c.notes ? '<div class="detail-notes"><label>Notes</label><p>' + escapeHtml(c.notes) + '</p></div>' : '')
+      );
+      attachDetailClose();
+    } catch (err) {
+      setHtml(detailContent, closeBtn() +
+        '<div class="error-banner"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>Failed to load case details. ' + escapeHtml(err.message) + '</div>');
+      attachDetailClose();
+    }
+  }
+
+  // ---- Task toggle (event delegation) ----
+  document.addEventListener('click', function(e) {
+    var ti = e.target.closest('.task-item[data-task-id]');
+    if (!ti || ti.classList.contains('loading')) return;
+
+    var taskId = ti.dataset.taskId;
+    var newDone = ti.dataset.done !== '1';
+    ti.classList.add('loading');
+
+    api('/api/tasks/' + encodeURIComponent(taskId), {
+      method: 'PATCH',
+      body: JSON.stringify({ done: newDone })
+    }).then(function(res) {
+      ti.dataset.done = newDone ? '1' : '0';
+      if (newDone) ti.classList.add('done'); else ti.classList.remove('done');
+
+      var pctEl = document.getElementById('detail-progress-pct');
+      var fillEl = document.getElementById('detail-progress-fill');
+      if (pctEl) setText(pctEl, res.case_progress + '%');
+      if (fillEl) fillEl.style.width = res.case_progress + '%';
+
+      var tl = document.getElementById('task-list');
+      var tt = document.getElementById('task-checklist-title');
+      if (tl && tt) {
+        var total = tl.querySelectorAll('.task-item').length;
+        var done = tl.querySelectorAll('.task-item.done').length;
+        setText(tt, 'Task Checklist (' + done + '/' + total + ')');
+      }
+    }).catch(function(err) {
+      console.error('Failed to toggle task:', err);
+    }).finally(function() {
+      ti.classList.remove('loading');
+    });
+  });
+
+  // ---- Create Case Modal ----
+  document.getElementById('btn-new-case').addEventListener('click', openCreateCase);
+  document.getElementById('create-case-close-btn').addEventListener('click', closeCreateCase);
+  document.getElementById('create-case-cancel-btn').addEventListener('click', closeCreateCase);
+
+  function closeCreateCase() { document.getElementById('create-case-modal').classList.remove('active'); }
+
+  async function openCreateCase() {
+    var modal = document.getElementById('create-case-modal');
+    modal.classList.add('active');
+    document.getElementById('create-case-error').classList.remove('visible');
+    document.getElementById('create-case-form').reset();
+
+    try {
+      var r = await Promise.all([
+        api('/api/clients'),
+        state.dashboardData ? Promise.resolve(state.dashboardData) : api('/api/dashboard')
+      ]);
+      var clients = r[0].data || [];
+      var lawyers = r[1].lawyers || [];
+
+      var cs = document.getElementById('cc-client');
+      var co = '<option value="">Select client...</option>';
+      clients.forEach(function(c) { co += '<option value="' + escapeHtml(c.id) + '">' + escapeHtml(c.name) + '</option>'; });
+      setHtml(cs, co);
+
+      var ls = document.getElementById('cc-lawyer');
+      var lo = '<option value="">Select lawyer...</option>';
+      if (lawyers.length > 0) {
+        lawyers.forEach(function(l) { lo += '<option value="' + escapeHtml(l.id) + '">' + escapeHtml(l.name) + ' (' + escapeHtml(l.role) + ')</option>'; });
+      } else if (state.user) {
+        lo += '<option value="' + escapeHtml(state.user.id) + '">' + escapeHtml(state.user.name) + ' (' + escapeHtml(state.user.role) + ')</option>';
+      }
+      setHtml(ls, lo);
+    } catch (err) { console.error('Failed to load form data:', err); }
+  }
+
+  document.getElementById('create-case-form').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    var errEl = document.getElementById('create-case-error');
+    errEl.classList.remove('visible');
+
+    var clientId = document.getElementById('cc-client').value;
+    var lawyerId = document.getElementById('cc-lawyer').value;
+    var title = document.getElementById('cc-title').value.trim();
+    var type = document.getElementById('cc-type').value;
+    var priority = document.getElementById('cc-priority').value;
+    var deadline = document.getElementById('cc-deadline').value || null;
+    var notes = document.getElementById('cc-notes').value.trim() || null;
+
+    if (!clientId || !lawyerId || !title || !type) {
+      setText(errEl, 'Please fill in all required fields.');
+      errEl.classList.add('visible');
+      return;
+    }
+
+    var btn = document.getElementById('create-case-submit');
+    btn.disabled = true; setText(btn, 'Creating...');
+
+    try {
+      await api('/api/cases', {
+        method: 'POST',
+        body: JSON.stringify({ client_id: clientId, lawyer_id: lawyerId, title: title, type: type, priority: priority, deadline: deadline, notes: notes })
+      });
+      closeCreateCase();
+      loadDashboard();
+    } catch (err) {
+      setText(errEl, (err.data && err.data.error) || 'Failed to create case.');
+      errEl.classList.add('visible');
+    } finally {
+      btn.disabled = false; setText(btn, 'Create Case');
+    }
+  });
+
+  // ---- Export ----
+  document.getElementById('btn-export').addEventListener('click', async function() {
+    try {
+      var data = await api('/api/export/firm');
+      var blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+      var url = URL.createObjectURL(blob);
+      var a = document.createElement('a');
+      a.href = url;
+      a.download = 'counsel-export-' + new Date().toISOString().split('T')[0] + '.json';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    } catch (err) {
+      alert('Export failed: ' + ((err.data && err.data.error) || err.message));
+    }
+  });
+
+  // ---- Modal close on overlay click / ESC ----
+  document.querySelectorAll('.modal-overlay').forEach(function(ov) {
+    ov.addEventListener('click', function(e) { if (e.target === ov) ov.classList.remove('active'); });
+  });
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') document.querySelectorAll('.modal-overlay.active').forEach(function(m) { m.classList.remove('active'); });
+  });
+
+  // ---- Init ----
+  (function() {
+    if (getToken() && getUser()) showApp();
+    else showLogin();
+  })();
+
+})();
 </script>
 </body>
 </html>
