@@ -14,6 +14,9 @@ import { dashboardRoutes } from "./routes/dashboard";
 import { onboardingRoutes } from "./routes/onboarding";
 import { exportRoutes } from "./routes/export";
 import { gdprRoutes } from "./routes/gdpr";
+import { pricingRoutes } from "./routes/pricing";
+import { validateBodyLengths } from "./middleware/validate";
+import { rateLimitAuth } from "./middleware/validate";
 
 export type AppEnv = { Bindings: Env };
 
@@ -41,6 +44,12 @@ app.use(
   })
 );
 
+// Input validation — enforce field length limits on all write operations
+app.use("/api/*", validateBodyLengths);
+
+// Rate limiting on auth endpoints
+app.use("/api/auth/*", rateLimitAuth());
+
 // Health check
 app.get("/api/health", (c) =>
   c.json({ status: "ok", version: "0.1.0", region: "eu-west" })
@@ -59,6 +68,7 @@ app.route("/api/dashboard", dashboardRoutes);
 app.route("/api/onboarding", onboardingRoutes);
 app.route("/api/export", exportRoutes);
 app.route("/api/gdpr", gdprRoutes);
+app.route("/api/pricing", pricingRoutes);
 
 // Serve static frontend files for non-API routes
 app.get("*", async (c) => {
