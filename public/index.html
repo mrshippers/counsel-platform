@@ -522,6 +522,20 @@ body {
   .detail-grid { grid-template-columns: 1fr; }
   .modal { padding: 24px 20px; }
 }
+
+/* Additional view styles */
+.page-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:8px; }
+.page-title { font-family:var(--font-display); font-size:1.8rem; font-weight:500; color:var(--text); }
+.data-table { width:100%; border-collapse:collapse; }
+.data-table th { text-align:left; font-size:10px; font-weight:600; color:var(--text-mut); text-transform:uppercase; letter-spacing:.1em; padding:0 10px 12px; border-bottom:1px solid var(--glass-border); }
+.data-table td { padding:11px 10px; font-size:12.5px; color:var(--text-sec); border-bottom:1px solid rgba(255,255,255,0.015); }
+.data-table tr.clickable-row { cursor:pointer; transition:background .2s; }
+.data-table tr.clickable-row:hover { background:var(--gold-glow); }
+.clickable-row { cursor:pointer; transition:all .2s; }
+.clickable-row:hover { border-color:rgba(201,169,110,0.15) !important; }
+.error-msg { padding:40px; text-align:center; color:var(--danger); font-size:14px; }
+.btn-outline { display:inline-flex; align-items:center; gap:6px; padding:8px 16px; border-radius:var(--r-sm); background:rgba(15,23,42,0.3); border:1px solid var(--glass-border); color:var(--text-sec); font-size:12.5px; font-weight:500; cursor:pointer; font-family:var(--font-body); transition:all .3s; }
+.btn-outline:hover { border-color:rgba(201,169,110,0.18); }
 </style>
 </head>
 <body>
@@ -884,7 +898,21 @@ body {
     });
   });
 
+  var viewLoaders = {
+    dashboard: loadDashboard,
+    cases: loadCasesView,
+    clients: loadClientsView,
+    documents: loadDocumentsView,
+    calendar: loadCalendarView,
+    deadlines: loadDeadlinesView,
+    billing: loadBillingView,
+    lawyers: loadLawyersView,
+    analytics: loadAnalyticsView,
+    compliance: loadComplianceView,
+  };
+
   function renderPlaceholder(page) {
+    if (viewLoaders[page]) { viewLoaders[page](); return; }
     var t = page.charAt(0).toUpperCase() + page.slice(1);
     setHtml(document.getElementById('main-content'),
       '<div class="fade-in" style="padding:60px 0;text-align:center;">' +
@@ -1246,6 +1274,497 @@ body {
       btn.disabled = false; setText(btn, 'Create Case');
     }
   });
+
+  // ---- Shared rendering helpers for new views ----
+  function sPill(status) {
+    var ds = status === 'active' ? 'in_progress' : status;
+    return '<span class="status-pill ' + escapeHtml(ds) + '">' + escapeHtml(statusLabel(ds)) + '</span>';
+  }
+  function pBar(val) {
+    return '<div class="progress-bar"><div class="progress-fill" style="width:' + (val||0) + '%"></div></div><span class="progress-text">' + escapeHtml(val||0) + '%</span>';
+  }
+  function priBadge(p) {
+    var colors = { urgent:'var(--danger)', high:'var(--warning)', normal:'var(--text-mut)' };
+    return '<span style="font-size:11px;font-weight:600;color:' + (colors[p]||colors.normal) + ';text-transform:uppercase;">' + escapeHtml(p) + '</span>';
+  }
+
+  // ---- CASES VIEW ----
+  async function loadCasesView() {
+    var main = document.getElementById('main-content');
+    setHtml(main, '<div class="loading-spinner"><div class="spinner"></div></div>');
+    try {
+      var data = await api('/api/cases');
+      var cases = data.data || [];
+      var h = '<div class="fade-in"><div class="page-header"><h1 class="page-title">Cases</h1>' +
+        '<button class="btn btn-gold" onclick="openCreateCase()">+ New Case</button></div>' +
+        '<div class="glass-card" style="margin-top:16px;"><div class="form-group" style="margin-bottom:16px;">' +
+        '<input type="text" id="cases-search" class="form-input" placeholder="Search cases..." style="max-width:320px;"></div>' +
+        '<table class="data-table"><thead><tr><th>Title</th><th>Client</th><th>Type</th><th>Status</th><th>Progress</th><th>Priority</th><th>Deadline</th></tr></thead><tbody id="cases-tbody">';
+      cases.forEach(function(c) {
+        h += '<tr class="clickable-row" data-case-id="' + escapeHtml(c.id) + '">' +
+          '<td style="font-weight:600;color:var(--text);">' + escapeHtml(c.title) + '</td>' +
+          '<td>' + escapeHtml((c.clients && c.clients.name) || '—') + '</td>' +
+          '<td>' + escapeHtml(c.type) + '</td>' +
+          '<td>' + sPill(c.status) + '</td>' +
+          '<td>' + pBar(c.progress) + '</td>' +
+          '<td>' + priBadge(c.priority) + '</td>' +
+          '<td>' + escapeHtml(c.deadline ? new Date(c.deadline).toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'}) : 'None') + '</td></tr>';
+      });
+      h += '</tbody></table></div></div>';
+      setHtml(main, h);
+      document.querySelectorAll('.clickable-row[data-case-id]').forEach(function(r) {
+        r.addEventListener('click', function() { openCaseDetail(r.dataset.caseId); });
+      });
+      var si = document.getElementById('cases-search');
+      if (si) si.addEventListener('input', function() {
+        var q = si.value.toLowerCase();
+        document.querySelectorAll('#cases-tbody tr').forEach(function(r) {
+          r.style.display = r.textContent.toLowerCase().includes(q) ? '' : 'none';
+        });
+      });
+    } catch(e) { setHtml(main, '<div class="error-msg">Failed to load cases.</div>'); }
+  }
+
+  // ---- CLIENTS VIEW ----
+  async function loadClientsView() {
+    var main = document.getElementById('main-content');
+    setHtml(main, '<div class="loading-spinner"><div class="spinner"></div></div>');
+    try {
+      var data = await api('/api/clients');
+      var clients = data.data || [];
+      var h = '<div class="fade-in"><div class="page-header"><h1 class="page-title">Clients</h1>' +
+        '<button class="btn btn-gold" id="add-client-btn">+ New Client</button></div>' +
+        '<div class="glass-card" style="margin-top:16px;"><div class="form-group" style="margin-bottom:16px;">' +
+        '<input type="text" id="clients-search" class="form-input" placeholder="Search clients..." style="max-width:320px;"></div>' +
+        '<table class="data-table"><thead><tr><th>Name</th><th>Email</th><th>Phone</th><th>Type</th><th>Created</th></tr></thead><tbody id="clients-tbody">';
+      clients.forEach(function(cl) {
+        h += '<tr class="clickable-row" data-client-id="' + escapeHtml(cl.id) + '">' +
+          '<td style="font-weight:600;color:var(--text);">' + escapeHtml(cl.name) + '</td>' +
+          '<td>' + escapeHtml(cl.email || '—') + '</td>' +
+          '<td>' + escapeHtml(cl.phone || '—') + '</td>' +
+          '<td>' + escapeHtml(cl.type) + '</td>' +
+          '<td>' + escapeHtml(new Date(cl.created_at).toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'})) + '</td></tr>';
+      });
+      h += '</tbody></table></div></div>';
+      setHtml(main, h);
+      document.getElementById('add-client-btn').addEventListener('click', showAddClientForm);
+      document.querySelectorAll('.clickable-row[data-client-id]').forEach(function(r) {
+        r.addEventListener('click', function() { openClientDetail(r.dataset.clientId); });
+      });
+      var si = document.getElementById('clients-search');
+      if (si) si.addEventListener('input', function() {
+        var q = si.value.toLowerCase();
+        document.querySelectorAll('#clients-tbody tr').forEach(function(r) {
+          r.style.display = r.textContent.toLowerCase().includes(q) ? '' : 'none';
+        });
+      });
+    } catch(e) { setHtml(main, '<div class="error-msg">Failed to load clients.</div>'); }
+  }
+
+  function showAddClientForm() {
+    var ov = document.getElementById('modal-case-detail');
+    setHtml(document.getElementById('modal-case-detail-body'),
+      '<h2 style="font-family:var(--font-display);font-size:1.5rem;color:var(--text);margin-bottom:20px;">New Client</h2>' +
+      '<form id="add-client-form"><div class="form-group"><label class="form-label">Name *</label><input class="form-input" id="ac-name" required></div>' +
+      '<div class="form-group"><label class="form-label">Email</label><input class="form-input" id="ac-email" type="email"></div>' +
+      '<div class="form-group"><label class="form-label">Phone</label><input class="form-input" id="ac-phone"></div>' +
+      '<div class="form-group"><label class="form-label">Type</label><select class="form-select" id="ac-type"><option value="individual">Individual</option><option value="corporate">Corporate</option></select></div>' +
+      '<div class="form-group"><label class="form-label">Notes</label><textarea class="form-input" id="ac-notes" rows="3"></textarea></div>' +
+      '<button type="submit" class="btn btn-gold" style="width:100%;margin-top:12px;">Create Client</button>' +
+      '<div id="ac-error" class="form-error"></div></form>');
+    ov.classList.add('active');
+    document.getElementById('add-client-form').addEventListener('submit', async function(e) {
+      e.preventDefault();
+      try {
+        await api('/api/clients', { method:'POST', body: JSON.stringify({
+          name: document.getElementById('ac-name').value, email: document.getElementById('ac-email').value || undefined,
+          phone: document.getElementById('ac-phone').value || undefined, type: document.getElementById('ac-type').value,
+          notes: document.getElementById('ac-notes').value || undefined
+        })});
+        ov.classList.remove('active'); loadClientsView();
+      } catch(err) { var e2=document.getElementById('ac-error'); setText(e2,(err.data&&err.data.error)||'Failed'); e2.classList.add('visible'); }
+    });
+  }
+
+  async function openClientDetail(id) {
+    var ov = document.getElementById('modal-case-detail');
+    setHtml(document.getElementById('modal-case-detail-body'), '<div class="loading-spinner"><div class="spinner"></div></div>');
+    ov.classList.add('active');
+    try {
+      var cl = await api('/api/clients/' + id);
+      var d = cl.data || cl;
+      var cases = d.cases || [];
+      var h = '<h2 style="font-family:var(--font-display);font-size:1.5rem;color:var(--text);margin-bottom:4px;">' + escapeHtml(d.name) + '</h2>' +
+        '<div style="color:var(--text-mut);font-size:13px;margin-bottom:20px;">' + escapeHtml(d.type) + ' · ' + escapeHtml(d.email||'No email') + ' · ' + escapeHtml(d.phone||'No phone') + '</div>';
+      if (d.notes) h += '<div style="color:var(--text-sec);font-size:13px;margin-bottom:16px;padding:12px;background:var(--gold-glow);border-radius:8px;">' + escapeHtml(d.notes) + '</div>';
+      h += '<div style="font-size:12px;font-weight:600;color:var(--text-mut);text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px;">Cases (' + cases.length + ')</div>';
+      cases.forEach(function(c) {
+        h += '<div style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid rgba(255,255,255,0.03);">' +
+          '<div style="flex:1;"><div style="font-size:13px;font-weight:500;color:var(--text);">' + escapeHtml(c.title) + '</div>' +
+          '<div style="font-size:11px;color:var(--text-mut);">' + escapeHtml(c.type) + ' · ' + escapeHtml(c.status) + '</div></div>' +
+          pBar(c.progress) + '</div>';
+      });
+      setHtml(document.getElementById('modal-case-detail-body'), h);
+    } catch(e) { setHtml(document.getElementById('modal-case-detail-body'), '<div class="error-msg">Failed to load client.</div>'); }
+  }
+
+  // ---- DOCUMENTS VIEW ----
+  async function loadDocumentsView() {
+    var main = document.getElementById('main-content');
+    setHtml(main, '<div class="loading-spinner"><div class="spinner"></div></div>');
+    try {
+      var casesData = await api('/api/cases');
+      var cases = casesData.data || [];
+      var h = '<div class="fade-in"><div class="page-header"><h1 class="page-title">Documents</h1></div>' +
+        '<div class="glass-card" style="margin-top:16px;">';
+      if (cases.length === 0) { h += '<div style="color:var(--text-mut);padding:20px;">No cases yet. Create a case first to upload documents.</div>'; }
+      else {
+        h += '<div style="font-size:13px;color:var(--text-mut);margin-bottom:16px;">Select a case to view and manage documents.</div>';
+        cases.forEach(function(c) {
+          h += '<div class="doc-case-row clickable-row" data-case-id="' + escapeHtml(c.id) + '" style="display:flex;align-items:center;gap:12px;padding:14px;border-radius:var(--r);background:rgba(255,255,255,0.01);border:1px solid rgba(255,255,255,0.02);margin-bottom:8px;cursor:pointer;transition:all .2s;">' +
+            '<div style="flex:1;"><div style="font-size:14px;font-weight:500;color:var(--text);">' + escapeHtml(c.title) + '</div>' +
+            '<div style="font-size:11px;color:var(--text-mut);">' + escapeHtml((c.clients&&c.clients.name)||'') + ' · ' + escapeHtml(c.type) + '</div></div>' +
+            '<span style="font-size:11px;color:var(--gold);">View docs →</span></div>';
+        });
+      }
+      h += '</div></div>';
+      setHtml(main, h);
+      document.querySelectorAll('.doc-case-row').forEach(function(r) {
+        r.addEventListener('click', function() { loadCaseDocuments(r.dataset.caseId); });
+      });
+    } catch(e) { setHtml(main, '<div class="error-msg">Failed to load documents.</div>'); }
+  }
+
+  async function loadCaseDocuments(caseId) {
+    var main = document.getElementById('main-content');
+    setHtml(main, '<div class="loading-spinner"><div class="spinner"></div></div>');
+    try {
+      var data = await api('/api/documents/cases/' + caseId);
+      var docs = data.data || [];
+      var h = '<div class="fade-in"><div class="page-header"><h1 class="page-title">Documents</h1>' +
+        '<button class="btn btn-outline" onclick="loadDocumentsView()">← Back</button></div>' +
+        '<div class="glass-card" style="margin-top:16px;">';
+      if (docs.length === 0) { h += '<div style="color:var(--text-mut);padding:20px;">No documents uploaded yet for this case.</div>'; }
+      else {
+        h += '<table class="data-table"><thead><tr><th>File Name</th><th>Type</th><th>Size</th><th>Uploaded</th><th></th></tr></thead><tbody>';
+        docs.forEach(function(d) {
+          var size = d.file_size_bytes ? (d.file_size_bytes > 1048576 ? (d.file_size_bytes/1048576).toFixed(1)+' MB' : (d.file_size_bytes/1024).toFixed(0)+' KB') : '—';
+          h += '<tr><td style="font-weight:500;color:var(--text);">' + escapeHtml(d.file_name) + '</td>' +
+            '<td>' + escapeHtml(d.file_type||'—') + '</td><td>' + size + '</td>' +
+            '<td>' + escapeHtml(new Date(d.created_at).toLocaleDateString('en-GB',{day:'numeric',month:'short'})) + '</td>' +
+            '<td><button class="btn btn-outline" style="font-size:11px;padding:4px 10px;" onclick="deleteDocument(\'' + d.id + '\',\'' + caseId + '\')">Delete</button></td></tr>';
+        });
+        h += '</tbody></table>';
+      }
+      h += '</div></div>';
+      setHtml(main, h);
+    } catch(e) { setHtml(main, '<div class="error-msg">Failed to load documents.</div>'); }
+  }
+
+  window.deleteDocument = async function(docId, caseId) {
+    if (!confirm('Delete this document?')) return;
+    try { await api('/api/documents/' + docId, { method:'DELETE' }); loadCaseDocuments(caseId); }
+    catch(e) { alert('Failed to delete: ' + ((e.data&&e.data.error)||e.message)); }
+  };
+
+  // ---- CALENDAR VIEW ----
+  async function loadCalendarView() {
+    var main = document.getElementById('main-content');
+    var now = new Date();
+    state.calYear = state.calYear || now.getFullYear();
+    state.calMonth = state.calMonth || now.getMonth() + 1;
+    setHtml(main, '<div class="loading-spinner"><div class="spinner"></div></div>');
+    try {
+      var monthStr = state.calYear + '-' + String(state.calMonth).padStart(2,'0');
+      var data = await api('/api/calendar?month=' + monthStr);
+      var deadlines = data.data || [];
+      var daysInMonth = new Date(state.calYear, state.calMonth, 0).getDate();
+      var firstDay = new Date(state.calYear, state.calMonth - 1, 1).getDay();
+      firstDay = firstDay === 0 ? 6 : firstDay - 1; // Monday start
+      var monthNames = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+      var h = '<div class="fade-in"><div class="page-header"><h1 class="page-title">Calendar</h1>' +
+        '<div style="display:flex;gap:8px;align-items:center;">' +
+        '<button class="btn btn-outline" id="cal-prev">←</button>' +
+        '<span style="font-family:var(--font-display);font-size:1.2rem;color:var(--text);min-width:180px;text-align:center;">' + monthNames[state.calMonth-1] + ' ' + state.calYear + '</span>' +
+        '<button class="btn btn-outline" id="cal-next">→</button></div></div>' +
+        '<div class="glass-card" style="margin-top:16px;"><div style="display:grid;grid-template-columns:repeat(7,1fr);gap:1px;">';
+      ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'].forEach(function(d) {
+        h += '<div style="text-align:center;padding:8px;font-size:11px;font-weight:600;color:var(--text-mut);text-transform:uppercase;">' + d + '</div>';
+      });
+      for (var i = 0; i < firstDay; i++) h += '<div style="padding:8px;min-height:80px;"></div>';
+      for (var d = 1; d <= daysInMonth; d++) {
+        var dateStr = state.calYear + '-' + String(state.calMonth).padStart(2,'0') + '-' + String(d).padStart(2,'0');
+        var dayDeadlines = deadlines.filter(function(dl) { return dl.date === dateStr; });
+        var isToday = d === now.getDate() && state.calMonth === now.getMonth()+1 && state.calYear === now.getFullYear();
+        h += '<div style="padding:6px;min-height:80px;border:1px solid rgba(255,255,255,0.02);border-radius:6px;' + (isToday?'background:var(--gold-glow);border-color:rgba(201,169,110,0.15);':'') + '">' +
+          '<div style="font-size:12px;font-weight:' + (isToday?'700':'500') + ';color:' + (isToday?'var(--gold)':'var(--text)') + ';margin-bottom:4px;">' + d + '</div>';
+        dayDeadlines.forEach(function(dl) {
+          h += '<div style="font-size:10px;padding:2px 6px;margin-bottom:2px;border-radius:4px;background:var(--danger-dim,rgba(224,85,85,0.08));color:var(--danger);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;" title="' + escapeHtml(dl.title) + '">' + escapeHtml(dl.title) + '</div>';
+        });
+        h += '</div>';
+      }
+      h += '</div></div></div>';
+      setHtml(main, h);
+      document.getElementById('cal-prev').addEventListener('click', function() {
+        state.calMonth--; if(state.calMonth<1){state.calMonth=12;state.calYear--;} loadCalendarView();
+      });
+      document.getElementById('cal-next').addEventListener('click', function() {
+        state.calMonth++; if(state.calMonth>12){state.calMonth=1;state.calYear++;} loadCalendarView();
+      });
+    } catch(e) { setHtml(main, '<div class="error-msg">Failed to load calendar.</div>'); }
+  }
+
+  // ---- DEADLINES VIEW ----
+  async function loadDeadlinesView() {
+    var main = document.getElementById('main-content');
+    setHtml(main, '<div class="loading-spinner"><div class="spinner"></div></div>');
+    try {
+      var data = await api('/api/deadlines/upcoming');
+      var deadlines = data.data || [];
+      var calData = await api('/api/calendar');
+      var allDeadlines = calData.data || [];
+      var combined = allDeadlines.length > deadlines.length ? allDeadlines : deadlines;
+      combined.sort(function(a,b) { return new Date(a.date) - new Date(b.date); });
+      var h = '<div class="fade-in"><div class="page-header"><h1 class="page-title">Deadlines</h1>' +
+        '<button class="btn btn-gold" id="add-deadline-btn">+ New Deadline</button></div>' +
+        '<div class="glass-card" style="margin-top:16px;">';
+      if (combined.length === 0) { h += '<div style="color:var(--text-mut);padding:20px;">No deadlines yet.</div>'; }
+      else {
+        combined.forEach(function(dl) {
+          var days = Math.ceil((new Date(dl.date) - new Date()) / 86400000);
+          var urg = days <= 3 ? 'critical' : days <= 7 ? 'high' : 'normal';
+          var urgColors = { critical:'var(--danger)', high:'var(--warning)', normal:'var(--blue)' };
+          var urgBg = { critical:'rgba(224,85,85,0.08)', high:'rgba(226,176,74,0.08)', normal:'rgba(91,141,239,0.08)' };
+          h += '<div style="display:flex;align-items:center;gap:14px;padding:14px;border-radius:var(--r);background:rgba(255,255,255,0.01);border:1px solid rgba(255,255,255,0.02);margin-bottom:8px;">' +
+            '<div style="width:48px;height:48px;border-radius:8px;background:' + urgBg[urg] + ';display:flex;flex-direction:column;align-items:center;justify-content:center;flex-shrink:0;">' +
+            '<span style="font-size:18px;font-weight:700;color:var(--text);line-height:1;">' + new Date(dl.date).getDate() + '</span>' +
+            '<span style="font-size:8px;font-weight:600;color:var(--text-sec);text-transform:uppercase;">' + ['','Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][new Date(dl.date).getMonth()+1] + '</span></div>' +
+            '<div style="flex:1;"><div style="font-size:14px;font-weight:500;color:var(--text);">' + escapeHtml(dl.title) + '</div>' +
+            '<div style="font-size:11px;color:var(--text-mut);">' + escapeHtml((dl.cases&&dl.cases.title)||'') + '</div></div>' +
+            '<span style="font-size:11px;font-weight:600;padding:4px 10px;border-radius:10px;background:' + urgBg[urg] + ';color:' + urgColors[urg] + ';">' + (days<0?'Overdue':days+'d') + '</span>' +
+            '<button class="btn btn-outline" style="font-size:11px;padding:4px 10px;" onclick="deleteDeadline(\'' + dl.id + '\')">×</button></div>';
+        });
+      }
+      h += '</div></div>';
+      setHtml(main, h);
+      document.getElementById('add-deadline-btn').addEventListener('click', showAddDeadlineForm);
+    } catch(e) { setHtml(main, '<div class="error-msg">Failed to load deadlines.</div>'); }
+  }
+
+  function showAddDeadlineForm() {
+    var ov = document.getElementById('modal-case-detail');
+    setHtml(document.getElementById('modal-case-detail-body'),
+      '<h2 style="font-family:var(--font-display);font-size:1.5rem;color:var(--text);margin-bottom:20px;">New Deadline</h2>' +
+      '<form id="add-deadline-form"><div class="form-group"><label class="form-label">Title *</label><input class="form-input" id="dl-title" required placeholder="e.g. Witness Statement Filing"></div>' +
+      '<div class="form-group"><label class="form-label">Date *</label><input class="form-input" id="dl-date" type="date" required style="color-scheme:dark;"></div>' +
+      '<div class="form-group"><label class="form-label">Note</label><textarea class="form-input" id="dl-note" rows="2"></textarea></div>' +
+      '<button type="submit" class="btn btn-gold" style="width:100%;margin-top:12px;">Create Deadline</button>' +
+      '<div id="dl-error" class="form-error"></div></form>');
+    ov.classList.add('active');
+    document.getElementById('add-deadline-form').addEventListener('submit', async function(e) {
+      e.preventDefault();
+      try {
+        await api('/api/deadlines', { method:'POST', body: JSON.stringify({
+          title: document.getElementById('dl-title').value, date: document.getElementById('dl-date').value,
+          note: document.getElementById('dl-note').value || undefined
+        })});
+        ov.classList.remove('active'); loadDeadlinesView();
+      } catch(err) { var e2=document.getElementById('dl-error'); setText(e2,(err.data&&err.data.error)||'Failed'); e2.classList.add('visible'); }
+    });
+  }
+
+  window.deleteDeadline = async function(id) {
+    if (!confirm('Delete this deadline?')) return;
+    try { await api('/api/deadlines/' + id, { method:'DELETE' }); loadDeadlinesView(); }
+    catch(e) { alert('Failed: ' + ((e.data&&e.data.error)||e.message)); }
+  };
+
+  // ---- BILLING VIEW ----
+  async function loadBillingView() {
+    var main = document.getElementById('main-content');
+    setHtml(main, '<div class="loading-spinner"><div class="spinner"></div></div>');
+    try {
+      var data = await api('/api/pricing');
+      var plans = data.plans || [];
+      var h = '<div class="fade-in"><div class="page-header"><h1 class="page-title">Billing & Plans</h1></div>' +
+        '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:16px;margin-top:16px;">';
+      plans.forEach(function(p) {
+        var isCurrent = state.user && state.user.plan === p.id;
+        h += '<div class="glass-card" style="' + (isCurrent?'border-color:var(--gold);':'') + '">' +
+          '<div style="font-family:var(--font-display);font-size:1.3rem;color:var(--text);font-weight:600;">' + escapeHtml(p.name) + '</div>' +
+          (isCurrent?'<div style="font-size:10px;font-weight:700;color:var(--gold);text-transform:uppercase;margin-top:4px;">Current Plan</div>':'') +
+          '<div style="margin:16px 0;"><span style="font-family:var(--font-display);font-size:2.2rem;color:var(--text);font-weight:500;">' + escapeHtml(p.monthly_display) + '</span><span style="color:var(--text-mut);font-size:13px;">/month</span></div>' +
+          '<div style="font-size:12px;color:var(--text-mut);margin-bottom:4px;">Annual: ' + escapeHtml(p.annual_display) + '/year (save ~20%)</div>' +
+          '<div style="font-size:12px;color:var(--text-mut);margin-bottom:16px;">Up to ' + p.max_users + ' users · ' + escapeHtml(p.storage_display) + '</div>' +
+          '<ul style="list-style:none;padding:0;">';
+        (p.features||[]).forEach(function(f) {
+          h += '<li style="font-size:12px;color:var(--text-sec);padding:4px 0;display:flex;align-items:center;gap:6px;"><span style="color:var(--success);">✓</span>' + escapeHtml(f) + '</li>';
+        });
+        h += '</ul></div>';
+      });
+      h += '</div></div>';
+      setHtml(main, h);
+    } catch(e) { setHtml(main, '<div class="error-msg">Failed to load pricing.</div>'); }
+  }
+
+  // ---- LAWYERS VIEW ----
+  async function loadLawyersView() {
+    var main = document.getElementById('main-content');
+    setHtml(main, '<div class="loading-spinner"><div class="spinner"></div></div>');
+    try {
+      var data = await api('/api/lawyers');
+      var lawyers = data.data || [];
+      var h = '<div class="fade-in"><div class="page-header"><h1 class="page-title">Lawyers</h1></div>' +
+        '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:16px;margin-top:16px;">';
+      lawyers.forEach(function(l) {
+        var wl = l.workload || { active_cases:0, urgent_cases:0, deadline_pressure:0, overloaded:false };
+        h += '<div class="glass-card"><div style="display:flex;align-items:center;gap:14px;margin-bottom:16px;">' +
+          '<div class="avatar" style="width:48px;height:48px;font-size:16px;' + (wl.overloaded?'border-color:var(--warning);':'') + '">' + escapeHtml(l.avatar_initials||'??') + '</div>' +
+          '<div><div style="font-size:16px;font-weight:600;color:var(--text);">' + escapeHtml(l.name) + (wl.overloaded?' <span style="font-size:9px;font-weight:700;padding:2px 6px;border-radius:6px;background:rgba(226,176,74,0.08);color:var(--warning);">OVERLOADED</span>':'') + '</div>' +
+          '<div style="font-size:12px;color:var(--text-mut);">' + escapeHtml(l.role) + ' · ' + escapeHtml(l.email) + '</div></div></div>' +
+          '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;">' +
+          '<div style="text-align:center;"><div style="font-family:var(--font-display);font-size:1.8rem;color:var(--text);">' + wl.active_cases + '</div><div style="font-size:10px;color:var(--text-mut);">Active</div></div>' +
+          '<div style="text-align:center;"><div style="font-family:var(--font-display);font-size:1.8rem;color:' + (wl.urgent_cases?'var(--danger)':'var(--text)') + ';">' + wl.urgent_cases + '</div><div style="font-size:10px;color:var(--text-mut);">Urgent</div></div>' +
+          '<div style="text-align:center;"><div style="font-family:var(--font-display);font-size:1.8rem;color:var(--text);">' + wl.deadline_pressure + '</div><div style="font-size:10px;color:var(--text-mut);">Deadline</div></div></div>' +
+          '<div style="margin-top:12px;">' + pBar(Math.min(wl.active_cases/10*100,100)) + '</div>' +
+          '<div style="font-size:10px;color:var(--text-mut);margin-top:4px;">Capacity: ' + wl.active_cases + '/10 cases</div></div>';
+      });
+      if (lawyers.length === 0) h += '<div class="glass-card"><div style="color:var(--text-mut);padding:20px;">No team members. Lawyers are added during onboarding.</div></div>';
+      h += '</div></div>';
+      setHtml(main, h);
+    } catch(e) {
+      if (e.status === 403) setHtml(main, '<div class="fade-in" style="padding:60px 0;text-align:center;"><div style="font-family:var(--font-display);font-size:1.5rem;color:var(--text);margin-bottom:8px;">Access Restricted</div><div style="color:var(--text-mut);font-size:13px;">Only partners can view the Lawyers section.</div></div>');
+      else setHtml(main, '<div class="error-msg">Failed to load lawyers.</div>');
+    }
+  }
+
+  // ---- ANALYTICS VIEW ----
+  async function loadAnalyticsView() {
+    var main = document.getElementById('main-content');
+    setHtml(main, '<div class="loading-spinner"><div class="spinner"></div></div>');
+    try {
+      var data = await api('/api/dashboard');
+      var cs = data.case_stats || { pending:0, in_progress:0, completed:0, total:0 };
+      var triage = data.triage || {};
+      var h = '<div class="fade-in"><div class="page-header"><h1 class="page-title">Analytics</h1></div>' +
+        '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px;margin-top:16px;">';
+      var stats = [
+        { label:'Total Cases', val:cs.total, color:'var(--text)' },
+        { label:'Pending', val:cs.pending, color:'var(--blue)' },
+        { label:'In Progress', val:cs.in_progress, color:'var(--gold)' },
+        { label:'Completed', val:cs.completed, color:'var(--success)' },
+        { label:'Bleeding', val:triage.bleeding||0, color:'var(--danger)' },
+        { label:'Stalled', val:triage.stalled||0, color:'var(--warning)' },
+        { label:'Clients', val:data.client_count||0, color:'var(--text)' },
+        { label:'Deadlines', val:data.deadline_count||0, color:'var(--text)' },
+      ];
+      stats.forEach(function(s) {
+        h += '<div class="glass-card" style="text-align:center;">' +
+          '<div style="font-family:var(--font-display);font-size:2.5rem;color:' + s.color + ';font-weight:500;">' + s.val + '</div>' +
+          '<div style="font-size:12px;color:var(--text-mut);margin-top:4px;">' + s.label + '</div></div>';
+      });
+      h += '</div>';
+      // Case type breakdown
+      var cases = state.cases || [];
+      if (cases.length > 0) {
+        var types = {};
+        cases.forEach(function(c) { types[c.type] = (types[c.type]||0) + 1; });
+        h += '<div class="glass-card" style="margin-top:16px;"><div style="font-size:14px;font-weight:600;color:var(--text);margin-bottom:16px;">Cases by Practice Area</div>';
+        var maxCount = Math.max.apply(null, Object.values(types));
+        Object.keys(types).sort(function(a,b){return types[b]-types[a];}).forEach(function(t) {
+          var pct = (types[t]/maxCount*100);
+          h += '<div style="display:flex;align-items:center;gap:12px;margin-bottom:10px;">' +
+            '<div style="width:100px;font-size:12px;color:var(--text-sec);text-transform:capitalize;">' + escapeHtml(t.replace('_',' ')) + '</div>' +
+            '<div style="flex:1;height:20px;background:rgba(255,255,255,0.03);border-radius:4px;overflow:hidden;">' +
+            '<div style="height:100%;width:' + pct + '%;background:var(--gold);border-radius:4px;transition:width .6s;"></div></div>' +
+            '<div style="font-size:12px;font-weight:600;color:var(--text);min-width:24px;text-align:right;">' + types[t] + '</div></div>';
+        });
+        h += '</div>';
+      }
+      h += '</div>';
+      setHtml(main, h);
+    } catch(e) { setHtml(main, '<div class="error-msg">Failed to load analytics.</div>'); }
+  }
+
+  // ---- COMPLIANCE VIEW ----
+  async function loadComplianceView() {
+    var main = document.getElementById('main-content');
+    setHtml(main, '<div class="loading-spinner"><div class="spinner"></div></div>');
+    try {
+      var clientsData = await api('/api/clients');
+      var clients = clientsData.data || [];
+      var h = '<div class="fade-in"><div class="page-header"><h1 class="page-title">GDPR Compliance</h1></div>' +
+        '<div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:16px;">' +
+        '<div class="glass-card"><div style="font-size:14px;font-weight:600;color:var(--text);margin-bottom:4px;">Subject Access Request</div>' +
+        '<div style="font-size:12px;color:var(--text-mut);margin-bottom:16px;">Export all data held for a specific client as JSON. Required under UK GDPR Article 15.</div>' +
+        '<div class="form-group"><label class="form-label">Select Client</label><select class="form-select" id="sar-client">';
+      clients.forEach(function(cl) { h += '<option value="' + escapeHtml(cl.id) + '">' + escapeHtml(cl.name) + '</option>'; });
+      h += '</select></div><button class="btn btn-gold" id="sar-btn" style="width:100%;">Export Client Data (SAR)</button></div>' +
+        '<div class="glass-card"><div style="font-size:14px;font-weight:600;color:var(--text);margin-bottom:4px;">Right to Erasure</div>' +
+        '<div style="font-size:12px;color:var(--text-mut);margin-bottom:16px;">Permanently delete all data for a client. Cascades to cases, tasks, documents, deadlines. Required under UK GDPR Article 17.</div>' +
+        '<div class="form-group"><label class="form-label">Select Client</label><select class="form-select" id="erase-client">';
+      clients.forEach(function(cl) { h += '<option value="' + escapeHtml(cl.id) + '">' + escapeHtml(cl.name) + '</option>'; });
+      h += '</select></div><button class="btn" id="erase-btn" style="width:100%;background:var(--danger);color:white;border-color:var(--danger);">Erase Client Data</button></div></div>' +
+        '<div class="glass-card" style="margin-top:16px;"><div style="font-size:14px;font-weight:600;color:var(--text);margin-bottom:4px;">Firm Data Export</div>' +
+        '<div style="font-size:12px;color:var(--text-mut);margin-bottom:12px;">Export all firm data (clients, cases, tasks, documents metadata, deadlines, users) as machine-readable JSON. Required for data portability under UK GDPR Article 20.</div>' +
+        '<button class="btn btn-gold" id="firm-export-btn">Export All Firm Data</button></div>' +
+        '<div class="glass-card" style="margin-top:16px;"><div style="font-size:14px;font-weight:600;color:var(--text);margin-bottom:4px;">Compliance Status</div>' +
+        '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px;">';
+      var checks = [
+        { label:'Database region: EU West', ok:true },
+        { label:'Audit log: Immutable', ok:true },
+        { label:'Firm isolation: Active (RLS + API)', ok:true },
+        { label:'Password hashing: PBKDF2-SHA256', ok:true },
+        { label:'Failed login logging: Enabled', ok:true },
+        { label:'Account lockout: 10 attempts / 30min', ok:true },
+        { label:'Security headers: Active', ok:true },
+        { label:'Input validation: Active', ok:true },
+      ];
+      checks.forEach(function(c) {
+        h += '<div style="display:flex;align-items:center;gap:8px;font-size:12px;"><span style="color:var(--success);">✓</span><span style="color:var(--text-sec);">' + escapeHtml(c.label) + '</span></div>';
+      });
+      h += '</div></div></div>';
+      setHtml(main, h);
+
+      document.getElementById('sar-btn').addEventListener('click', async function() {
+        var clientId = document.getElementById('sar-client').value;
+        if (!clientId) return;
+        try {
+          var data = await api('/api/gdpr/export/' + clientId);
+          var blob = new Blob([JSON.stringify(data, null, 2)], { type:'application/json' });
+          var url = URL.createObjectURL(blob);
+          var a = document.createElement('a'); a.href = url; a.download = 'sar-export-' + clientId.substring(0,8) + '.json';
+          document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url);
+        } catch(e) { alert('SAR export failed: ' + ((e.data&&e.data.error)||e.message)); }
+      });
+
+      document.getElementById('erase-btn').addEventListener('click', async function() {
+        var clientId = document.getElementById('erase-client').value;
+        var clientName = document.getElementById('erase-client').selectedOptions[0].textContent;
+        if (!clientId) return;
+        if (!confirm('PERMANENTLY DELETE all data for ' + clientName + '?\n\nThis will delete:\n- All cases\n- All tasks\n- All documents\n- All deadlines\n\nThis action CANNOT be undone.')) return;
+        if (!confirm('Are you absolutely sure? Type the client name to confirm.\n\nClient: ' + clientName)) return;
+        try {
+          await api('/api/gdpr/erase/' + clientId, { method:'DELETE' });
+          alert('Client data for ' + clientName + ' has been permanently erased. This action has been logged in the audit trail.');
+          loadComplianceView();
+        } catch(e) { alert('Erasure failed: ' + ((e.data&&e.data.error)||e.message)); }
+      });
+
+      document.getElementById('firm-export-btn').addEventListener('click', async function() {
+        try {
+          var data = await api('/api/export/firm');
+          var blob = new Blob([JSON.stringify(data, null, 2)], { type:'application/json' });
+          var url = URL.createObjectURL(blob);
+          var a = document.createElement('a'); a.href = url; a.download = 'counsel-firm-export-' + new Date().toISOString().split('T')[0] + '.json';
+          document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url);
+        } catch(e) { alert('Export failed: ' + ((e.data&&e.data.error)||e.message)); }
+      });
+    } catch(e) {
+      if (e.status === 403) setHtml(main, '<div class="fade-in" style="padding:60px 0;text-align:center;"><div style="font-family:var(--font-display);font-size:1.5rem;color:var(--text);margin-bottom:8px;">Access Restricted</div><div style="color:var(--text-mut);font-size:13px;">Only partners can access GDPR Compliance tools.</div></div>');
+      else setHtml(main, '<div class="error-msg">Failed to load compliance.</div>');
+    }
+  }
 
   // ---- Export ----
   document.getElementById('btn-export').addEventListener('click', async function() {

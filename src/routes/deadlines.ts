@@ -83,7 +83,7 @@ deadlinesRoutes.post("/send-reminders", async (c) => {
   // Fetch deadlines within 48 hours, with related case, client, and lawyer data
   const { data: deadlines, error } = await supabase
     .from("deadlines")
-    .select("*, cases(title, id, clients(name)), users(id, name, email, reminder_emails_enabled)")
+    .select("*, cases(title, id)")
     .eq("firm_id", user.firm_id)
     .gte("date", todayStr)
     .lte("date", in48hStr)
@@ -93,43 +93,40 @@ deadlinesRoutes.post("/send-reminders", async (c) => {
     return c.json({ error: "Failed to fetch deadlines for reminders" }, 500);
   }
 
+  // Fetch lawyer data separately to avoid ambiguous FK join
+  const lawyerIds = [...new Set((deadlines || []).map((d) => d.lawyer_id).filter(Boolean))];
+  const { data: lawyersData } = lawyerIds.length > 0
+    ? await supabase.from("users").select("id, name, email, reminder_emails_enabled").in("id", lawyerIds)
+    : { data: [] };
+  const lawyerMap = new Map((lawyersData || []).map((l: { id: string }) => [l.id, l]));
+
   const reminders: Array<{
     deadline_id: string;
     lawyer_email: string;
     lawyer_name: string;
     case_title: string;
-    client_name: string;
     deadline_date: string;
     deadline_title: string;
   }> = [];
   let skipped = 0;
 
   for (const deadline of deadlines || []) {
-    const lawyerData = deadline.users as {
-      id: string;
-      name: string;
-      email: string;
-      reminder_emails_enabled: boolean;
-    } | null;
+    const lawyer = lawyerMap.get(deadline.lawyer_id) as {
+      id: string; name: string; email: string; reminder_emails_enabled: boolean;
+    } | undefined;
 
-    // Skip if lawyer has reminders disabled
-    if (!lawyerData || !lawyerData.reminder_emails_enabled) {
+    if (!lawyer || !lawyer.reminder_emails_enabled) {
       skipped++;
       continue;
     }
 
-    const caseData = deadline.cases as {
-      title: string;
-      id: string;
-      clients: { name: string } | null;
-    } | null;
+    const caseData = deadline.cases as { title: string; id: string } | null;
 
     reminders.push({
       deadline_id: deadline.id,
-      lawyer_email: lawyerData.email,
-      lawyer_name: lawyerData.name,
+      lawyer_email: lawyer.email,
+      lawyer_name: lawyer.name,
       case_title: caseData?.title || deadline.title,
-      client_name: caseData?.clients?.name || "N/A",
       deadline_date: deadline.date,
       deadline_title: deadline.title,
     });

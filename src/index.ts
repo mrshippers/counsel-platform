@@ -73,7 +73,7 @@ app.route("/api/pricing", pricingRoutes);
 // Serve frontend HTML for non-API routes
 app.get("*", async (c) => {
   // Try to serve from static assets binding first
-  const env = c.env as Record<string, unknown>;
+  const env = c.env as unknown as Record<string, unknown>;
   if (env.ASSETS) {
     const assetResponse = await (env.ASSETS as { fetch: (req: Request) => Promise<Response> }).fetch(c.req.raw);
     if (assetResponse.status !== 404) return assetResponse;

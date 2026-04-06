@@ -15,7 +15,7 @@ calendarRoutes.get("/", async (c) => {
 
   let query = supabase
     .from("deadlines")
-    .select("*, cases(title, status), users(name, avatar_initials)")
+    .select("*")
     .eq("firm_id", user.firm_id);
 
   // Associate: only their deadlines
