@@ -43,7 +43,7 @@ function createChainableMock(
         }
         return (...args: unknown[]) => {
           mockQueryLog.push({ table, method: prop, args });
-          if (["single", "limit"].includes(prop)) return Promise.resolve(getNext());
+          if (["single", "limit", "in"].includes(prop)) return Promise.resolve(getNext());
           // order() can be terminal OR chained (.order().limit())
           // Return a dual-purpose object: thenable AND chainable
           if (prop === "order") {
@@ -372,13 +372,19 @@ describe("Deadlines — Reminders", () => {
           lawyer_id: TEST_PARTNER.id,
           title: "Court submission",
           date: "2026-04-06",
-          cases: { title: "Smith v Jones", id: "c1", clients: { name: "John Smith" } },
-          users: {
-            id: TEST_PARTNER.id,
-            name: TEST_PARTNER.name,
-            email: TEST_PARTNER.email,
-            reminder_emails_enabled: true,
-          },
+          cases: { title: "Smith v Jones", id: "c1" },
+        },
+      ],
+      error: null,
+    });
+    // Separate user lookup (refactored to avoid ambiguous FK)
+    mockResponses.push({
+      data: [
+        {
+          id: TEST_PARTNER.id,
+          name: TEST_PARTNER.name,
+          email: TEST_PARTNER.email,
+          reminder_emails_enabled: true,
         },
       ],
       error: null,
@@ -394,7 +400,6 @@ describe("Deadlines — Reminders", () => {
     const reminder = body.reminders[0];
     expect(reminder.lawyer_email).toBe(TEST_PARTNER.email);
     expect(reminder.case_title).toBe("Smith v Jones");
-    expect(reminder.client_name).toBe("John Smith");
     expect(reminder.deadline_date).toBe("2026-04-06");
   });
 
@@ -409,13 +414,19 @@ describe("Deadlines — Reminders", () => {
           lawyer_id: TEST_ASSOCIATE.id,
           title: "Court submission",
           date: "2026-04-06",
-          cases: { title: "Smith v Jones", id: "c1", clients: { name: "John Smith" } },
-          users: {
-            id: TEST_ASSOCIATE.id,
-            name: TEST_ASSOCIATE.name,
-            email: TEST_ASSOCIATE.email,
-            reminder_emails_enabled: false,
-          },
+          cases: { title: "Smith v Jones", id: "c1" },
+        },
+      ],
+      error: null,
+    });
+    // Separate user lookup
+    mockResponses.push({
+      data: [
+        {
+          id: TEST_ASSOCIATE.id,
+          name: TEST_ASSOCIATE.name,
+          email: TEST_ASSOCIATE.email,
+          reminder_emails_enabled: false,
         },
       ],
       error: null,

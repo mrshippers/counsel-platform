@@ -81,5 +81,14 @@ app.get("*", async (c) => {
   return c.text("Counsel — Case Management for UK Law Firms", 200);
 });
 
-export default app;
+export default {
+  fetch: app.fetch,
+  async scheduled(_event: ScheduledEvent, _env: Env, _ctx: ExecutionContext) {
+    // Daily 8am UTC — trigger deadline reminder emails
+    // Calls the deadlines/send-reminders logic internally
+    const url = new URL("/api/deadlines/reminders", "http://internal");
+    const req = new Request(url.toString(), { method: "POST" });
+    await app.fetch(req, _env);
+  },
+};
 export { app };

@@ -150,6 +150,47 @@ documentsRoutes.get("/clients/:clientId", async (c) => {
   return c.json({ data: docs }, 200);
 });
 
+// GET /api/documents/:id/download-url — generate signed download URL
+documentsRoutes.get("/:id/download-url", async (c) => {
+  const user = c.get("user");
+  const docId = c.req.param("id");
+  const supabase = createSupabaseAdmin(c.env);
+
+  // Fetch document
+  const { data: doc, error: docError } = await supabase
+    .from("documents")
+    .select("*")
+    .eq("id", docId)
+    .single();
+
+  if (!doc || docError) {
+    return c.json({ error: "Document not found" }, 404);
+  }
+
+  // Verify the document's case belongs to user's firm
+  const { data: caseData, error: caseError } = await supabase
+    .from("cases")
+    .select("id")
+    .eq("id", doc.case_id)
+    .eq("firm_id", user.firm_id)
+    .single();
+
+  if (!caseData || caseError) {
+    return c.json({ error: "Document not found" }, 404);
+  }
+
+  // Generate signed URL (1 hour expiry)
+  const { data: signedData, error: signError } = await supabase.storage
+    .from(doc.storage_bucket)
+    .createSignedUrl(doc.storage_path, 3600);
+
+  if (signError || !signedData) {
+    return c.json({ error: "Failed to generate download URL" }, 500);
+  }
+
+  return c.json({ url: signedData.signedUrl, expires_in: 3600 }, 200);
+});
+
 // DELETE /api/documents/:id — delete document (associate: own only, partner: any in firm)
 documentsRoutes.delete("/:id", async (c) => {
   const user = c.get("user");

@@ -514,14 +514,53 @@ body {
 }
 @media (max-width: 768px) {
   #app.active { grid-template-columns: 1fr; grid-template-areas: "topbar" "main"; }
-  .sidebar { display: none; }
+  .sidebar { display: none; position: fixed; top: 0; left: 0; bottom: 0; width: 260px; z-index: 200; }
+  .sidebar.mobile-open { display: flex; }
+  .mobile-overlay { display: none; position: fixed; inset: 0; background: rgba(6,9,15,0.6); z-index: 199; }
+  .mobile-overlay.active { display: block; }
+  .hamburger-btn { display: flex !important; }
   .main-content { padding: 20px 16px; }
   .triage-row { grid-template-columns: 1fr 1fr; }
   .dashboard-right { grid-template-columns: 1fr; }
   .form-row { grid-template-columns: 1fr; }
   .detail-grid { grid-template-columns: 1fr; }
   .modal { padding: 24px 20px; }
+  .cases-table .col-type, .cases-table th.col-type,
+  .cases-table .col-priority, .cases-table th.col-priority { display: none; }
+  .data-table .col-type, .data-table th.col-type { display: none; }
+  .cal-cell { min-height: 60px !important; padding: 4px !important; }
+  .cal-cell .cal-day { font-size: 10px !important; }
+  .cal-cell .cal-event { font-size: 8px !important; }
 }
+
+/* Hamburger button - hidden on desktop */
+.hamburger-btn {
+  display: none; align-items: center; justify-content: center;
+  width: 36px; height: 36px; background: transparent;
+  border: 1px solid rgba(201,169,110,0.12); border-radius: 8px;
+  color: var(--text); font-size: 1.2rem; cursor: pointer;
+  transition: all 0.2s var(--ease); margin-right: 12px; flex-shrink: 0;
+}
+.hamburger-btn:hover { background: var(--gold-glow); color: var(--gold); border-color: rgba(201,169,110,0.25); }
+
+/* Cookie consent banner */
+.cookie-banner {
+  position: fixed; bottom: 0; left: 0; right: 0; z-index: 10000;
+  background: rgba(15,23,42,0.85);
+  backdrop-filter: blur(30px) saturate(1.4);
+  -webkit-backdrop-filter: blur(30px) saturate(1.4);
+  border-top: 1px solid rgba(201,169,110,0.12);
+  padding: 16px 24px;
+  display: flex; align-items: center; justify-content: center; gap: 20px;
+  flex-wrap: wrap;
+}
+.cookie-banner .cookie-text { font-size: 0.85rem; color: var(--text-sec); max-width: 600px; text-align: center; }
+.cookie-banner .btn { flex-shrink: 0; }
+
+/* Edit form within modals */
+.edit-form-section { margin-top: 20px; padding-top: 20px; border-top: 1px solid rgba(201,169,110,0.08); }
+.edit-form-section .form-group { margin-bottom: 14px; }
+.edit-form-section textarea.form-input { min-height: 80px; resize: vertical; }
 
 /* Additional view styles */
 .page-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:8px; }
@@ -623,6 +662,10 @@ body {
       <div class="firm-plan" id="firm-plan">--</div>
     </div>
     <div class="sidebar-logout">
+      <button class="logout-btn" onclick="showChangePassword()" style="margin-bottom:6px;color:var(--text-mut);">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px;"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+        Change Password
+      </button>
       <button class="logout-btn" id="logout-btn">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
         Sign Out
@@ -630,11 +673,17 @@ body {
     </div>
   </aside>
 
+  <!-- Mobile overlay -->
+  <div class="mobile-overlay" id="mobile-overlay"></div>
+
   <!-- Top bar -->
   <header class="topbar">
-    <div class="topbar-left">
-      <div class="topbar-greeting" id="topbar-greeting">Good morning</div>
-      <div class="topbar-date" id="topbar-date"></div>
+    <div style="display:flex;align-items:center;">
+      <button class="hamburger-btn" id="hamburger-btn">&#9776;</button>
+      <div class="topbar-left">
+        <div class="topbar-greeting" id="topbar-greeting">Good morning</div>
+        <div class="topbar-date" id="topbar-date"></div>
+      </div>
     </div>
     <div class="topbar-actions">
       <button class="btn btn-ghost btn-sm" id="btn-export">
@@ -718,6 +767,52 @@ body {
       </div>
     </form>
   </div>
+</div>
+
+<!-- GENERIC DETAIL MODAL (used by clients, deadlines, add-lawyer) -->
+<div class="modal-overlay" id="modal-case-detail">
+  <div class="modal glass-strong" id="modal-case-detail-body">
+    <button class="modal-close" onclick="document.getElementById('modal-case-detail').classList.remove('active')">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+    </button>
+  </div>
+</div>
+
+<!-- PASSWORD CHANGE MODAL -->
+<div class="modal-overlay" id="password-modal">
+  <div class="modal glass-strong" style="max-width:420px;">
+    <button class="modal-close" id="password-modal-close">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+    </button>
+    <div class="modal-title">Change Password</div>
+    <div class="modal-subtitle">Update your account password</div>
+    <div id="pw-error" class="form-error"></div>
+    <div id="pw-success" class="form-error" style="background:var(--success-dim);border-color:rgba(92,184,122,0.2);color:var(--success);"></div>
+    <form id="password-form">
+      <div class="form-group">
+        <label class="form-label" for="pw-current">Current Password</label>
+        <input class="form-input" type="password" id="pw-current" required autocomplete="current-password">
+      </div>
+      <div class="form-group">
+        <label class="form-label" for="pw-new">New Password</label>
+        <input class="form-input" type="password" id="pw-new" required minlength="8" autocomplete="new-password">
+      </div>
+      <div class="form-group">
+        <label class="form-label" for="pw-confirm">Confirm New Password</label>
+        <input class="form-input" type="password" id="pw-confirm" required minlength="8" autocomplete="new-password">
+      </div>
+      <div class="form-actions">
+        <button type="button" class="btn btn-ghost" id="password-cancel-btn">Cancel</button>
+        <button type="submit" class="btn btn-gold" id="password-submit-btn">Update Password</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- COOKIE CONSENT BANNER -->
+<div class="cookie-banner" id="cookie-banner" style="display:none;">
+  <span class="cookie-text">This site uses essential cookies only for authentication. No tracking or analytics cookies are used.</span>
+  <button class="btn btn-gold btn-sm" id="cookie-accept-btn">Accept</button>
 </div>
 
 <!-- ============================================================
@@ -1156,7 +1251,8 @@ body {
         '<div class="detail-progress"><div class="detail-progress-label"><span>Progress</span><span id="detail-progress-pct">' + escapeHtml(c.progress || 0) + '%</span></div>' +
           '<div class="detail-progress-bar"><div class="detail-progress-fill" id="detail-progress-fill" style="width:' + (c.progress || 0) + '%"></div></div></div>' +
         '<div class="task-checklist"><div class="task-checklist-title" id="task-checklist-title">Task Checklist (' + doneCount + '/' + tasks.length + ')</div><div id="task-list">' + taskHtml + '</div></div>' +
-        (c.notes ? '<div class="detail-notes"><label>Notes</label><p>' + escapeHtml(c.notes) + '</p></div>' : '')
+        (c.notes ? '<div class="detail-notes"><label>Notes</label><p>' + escapeHtml(c.notes) + '</p></div>' : '') +
+        '<button class="btn btn-outline" style="width:100%;margin-top:16px;" onclick="showEditCase(\'' + escapeHtml(caseId) + '\')">Edit Case</button>'
       );
       attachDetailClose();
     } catch (err) {
@@ -1404,6 +1500,7 @@ body {
           '<div style="font-size:11px;color:var(--text-mut);">' + escapeHtml(c.type) + ' · ' + escapeHtml(c.status) + '</div></div>' +
           pBar(c.progress) + '</div>';
       });
+      h += '<button class="btn btn-outline" style="width:100%;margin-top:16px;" onclick="showEditClient(\'' + escapeHtml(id) + '\')">Edit Client</button>';
       setHtml(document.getElementById('modal-case-detail-body'), h);
     } catch(e) { setHtml(document.getElementById('modal-case-detail-body'), '<div class="error-msg">Failed to load client.</div>'); }
   }
@@ -1542,6 +1639,7 @@ body {
             '<div style="flex:1;"><div style="font-size:14px;font-weight:500;color:var(--text);">' + escapeHtml(dl.title) + '</div>' +
             '<div style="font-size:11px;color:var(--text-mut);">' + escapeHtml((dl.cases&&dl.cases.title)||'') + '</div></div>' +
             '<span style="font-size:11px;font-weight:600;padding:4px 10px;border-radius:10px;background:' + urgBg[urg] + ';color:' + urgColors[urg] + ';">' + (days<0?'Overdue':days+'d') + '</span>' +
+            '<button class="btn btn-outline" style="font-size:11px;padding:4px 10px;" onclick="editDeadline(\'' + dl.id + '\')">Edit</button>' +
             '<button class="btn btn-outline" style="font-size:11px;padding:4px 10px;" onclick="deleteDeadline(\'' + dl.id + '\')">×</button></div>';
         });
       }
@@ -1614,7 +1712,8 @@ body {
     try {
       var data = await api('/api/lawyers');
       var lawyers = data.data || [];
-      var h = '<div class="fade-in"><div class="page-header"><h1 class="page-title">Lawyers</h1></div>' +
+      var h = '<div class="fade-in"><div class="page-header"><h1 class="page-title">Lawyers</h1>' +
+        '<button class="btn btn-gold" onclick="showAddLawyerForm()">+ Add Lawyer</button></div>' +
         '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:16px;margin-top:16px;">';
       lawyers.forEach(function(l) {
         var wl = l.workload || { active_cases:0, urgent_cases:0, deadline_pressure:0, overloaded:false };
@@ -1791,6 +1890,183 @@ body {
   document.addEventListener('keydown', function(e) {
     if (e.key === 'Escape') document.querySelectorAll('.modal-overlay.active').forEach(function(m) { m.classList.remove('active'); });
   });
+
+  // ---- EDIT CASE (inline in detail modal) ----
+  window.showEditCase = function(caseId) {
+    var modal = document.getElementById('modal-case-detail-body');
+    var existing = modal.querySelector('.edit-form-section');
+    if (existing) { existing.remove(); return; } // toggle off
+    // Fetch current case data and build form
+    api('/api/cases/' + caseId).then(function(res) {
+      var c = res.data || res;
+      var form = document.createElement('div');
+      form.className = 'edit-form-section';
+      form.innerHTML = '<h3 style="font-family:var(--font-display);font-size:1.2rem;color:var(--text);margin-bottom:12px;">Edit Case</h3>' +
+        '<form id="edit-case-form"><div class="form-group"><label class="form-label">Title</label><input class="form-input" id="ec-title" value="' + escapeHtml(c.title||'') + '"></div>' +
+        '<div class="form-row"><div class="form-group"><label class="form-label">Status</label><select class="form-select" id="ec-status"><option value="pending"' + (c.status==='pending'?' selected':'') + '>Pending</option><option value="in_progress"' + (c.status==='in_progress'?' selected':'') + '>In Progress</option><option value="completed"' + (c.status==='completed'?' selected':'') + '>Completed</option></select></div>' +
+        '<div class="form-group"><label class="form-label">Priority</label><select class="form-select" id="ec-priority"><option value="normal"' + (c.priority==='normal'?' selected':'') + '>Normal</option><option value="high"' + (c.priority==='high'?' selected':'') + '>High</option><option value="urgent"' + (c.priority==='urgent'?' selected':'') + '>Urgent</option></select></div></div>' +
+        '<div class="form-group"><label class="form-label">Deadline</label><input class="form-input" type="date" id="ec-deadline" value="' + escapeHtml(c.deadline||'') + '" style="color-scheme:dark;"></div>' +
+        '<div class="form-group"><label class="form-label">Notes</label><textarea class="form-input" id="ec-notes" rows="3">' + escapeHtml(c.notes||'') + '</textarea></div>' +
+        '<button type="submit" class="btn btn-gold" style="width:100%;">Save Changes</button>' +
+        '<div id="ec-error" class="form-error"></div></form>';
+      modal.appendChild(form);
+      document.getElementById('edit-case-form').addEventListener('submit', async function(e) {
+        e.preventDefault();
+        try {
+          await api('/api/cases/' + caseId, { method:'PATCH', body: JSON.stringify({
+            title: document.getElementById('ec-title').value,
+            status: document.getElementById('ec-status').value,
+            priority: document.getElementById('ec-priority').value,
+            deadline: document.getElementById('ec-deadline').value || null,
+            notes: document.getElementById('ec-notes').value || null
+          })});
+          openCaseDetail(caseId); // refresh
+        } catch(err) { var e2=document.getElementById('ec-error'); setText(e2,(err.data&&err.data.error)||'Failed'); e2.classList.add('visible'); }
+      });
+    });
+  };
+
+  // ---- EDIT CLIENT ----
+  window.showEditClient = function(clientId) {
+    var modal = document.getElementById('modal-case-detail-body');
+    var existing = modal.querySelector('.edit-form-section');
+    if (existing) { existing.remove(); return; }
+    api('/api/clients/' + clientId).then(function(res) {
+      var cl = res.data || res;
+      var form = document.createElement('div');
+      form.className = 'edit-form-section';
+      form.innerHTML = '<h3 style="font-family:var(--font-display);font-size:1.2rem;color:var(--text);margin-bottom:12px;">Edit Client</h3>' +
+        '<form id="edit-client-form"><div class="form-group"><label class="form-label">Name</label><input class="form-input" id="ecl-name" value="' + escapeHtml(cl.name||'') + '"></div>' +
+        '<div class="form-group"><label class="form-label">Email</label><input class="form-input" id="ecl-email" value="' + escapeHtml(cl.email||'') + '"></div>' +
+        '<div class="form-group"><label class="form-label">Phone</label><input class="form-input" id="ecl-phone" value="' + escapeHtml(cl.phone||'') + '"></div>' +
+        '<div class="form-group"><label class="form-label">Type</label><select class="form-select" id="ecl-type"><option value="individual"' + (cl.type==='individual'?' selected':'') + '>Individual</option><option value="corporate"' + (cl.type==='corporate'?' selected':'') + '>Corporate</option></select></div>' +
+        '<div class="form-group"><label class="form-label">Notes</label><textarea class="form-input" id="ecl-notes" rows="3">' + escapeHtml(cl.notes||'') + '</textarea></div>' +
+        '<button type="submit" class="btn btn-gold" style="width:100%;">Save Changes</button>' +
+        '<div id="ecl-error" class="form-error"></div></form>';
+      modal.appendChild(form);
+      document.getElementById('edit-client-form').addEventListener('submit', async function(e) {
+        e.preventDefault();
+        try {
+          await api('/api/clients/' + clientId, { method:'PATCH', body: JSON.stringify({
+            name: document.getElementById('ecl-name').value,
+            email: document.getElementById('ecl-email').value || null,
+            phone: document.getElementById('ecl-phone').value || null,
+            type: document.getElementById('ecl-type').value,
+            notes: document.getElementById('ecl-notes').value || null
+          })});
+          openClientDetail(clientId);
+        } catch(err) { var e2=document.getElementById('ecl-error'); setText(e2,(err.data&&err.data.error)||'Failed'); e2.classList.add('visible'); }
+      });
+    });
+  };
+
+  // ---- EDIT DEADLINE ----
+  window.editDeadline = function(dlId) {
+    var ov = document.getElementById('modal-case-detail');
+    setHtml(document.getElementById('modal-case-detail-body'),
+      '<h2 style="font-family:var(--font-display);font-size:1.5rem;color:var(--text);margin-bottom:20px;">Edit Deadline</h2>' +
+      '<div class="loading-spinner"><div class="spinner"></div></div>');
+    ov.classList.add('active');
+    api('/api/deadlines/' + dlId).catch(function() { return { title:'', date:'', note:'' }; }).then(function() {
+      setHtml(document.getElementById('modal-case-detail-body'),
+        '<h2 style="font-family:var(--font-display);font-size:1.5rem;color:var(--text);margin-bottom:20px;">Edit Deadline</h2>' +
+        '<form id="edit-dl-form"><div class="form-group"><label class="form-label">Title</label><input class="form-input" id="edl-title" required></div>' +
+        '<div class="form-group"><label class="form-label">Date</label><input class="form-input" id="edl-date" type="date" required style="color-scheme:dark;"></div>' +
+        '<div class="form-group"><label class="form-label">Note</label><textarea class="form-input" id="edl-note" rows="2"></textarea></div>' +
+        '<button type="submit" class="btn btn-gold" style="width:100%;">Save</button>' +
+        '<div id="edl-error" class="form-error"></div></form>');
+      document.getElementById('edit-dl-form').addEventListener('submit', async function(e) {
+        e.preventDefault();
+        try {
+          await api('/api/deadlines/' + dlId, { method:'PATCH', body: JSON.stringify({
+            title: document.getElementById('edl-title').value,
+            date: document.getElementById('edl-date').value,
+            note: document.getElementById('edl-note').value || null
+          })});
+          ov.classList.remove('active'); loadDeadlinesView();
+        } catch(err) { var e2=document.getElementById('edl-error'); setText(e2,(err.data&&err.data.error)||'Failed'); e2.classList.add('visible'); }
+      });
+    });
+  };
+
+  // ---- ADD LAWYER (UI) ----
+  window.showAddLawyerForm = function() {
+    var ov = document.getElementById('modal-case-detail');
+    setHtml(document.getElementById('modal-case-detail-body'),
+      '<h2 style="font-family:var(--font-display);font-size:1.5rem;color:var(--text);margin-bottom:20px;">Add Lawyer</h2>' +
+      '<form id="add-lawyer-form"><div class="form-group"><label class="form-label">Full Name *</label><input class="form-input" id="al-name" required placeholder="e.g. Amir Khalil"></div>' +
+      '<div class="form-group"><label class="form-label">Email *</label><input class="form-input" id="al-email" type="email" required placeholder="e.g. amir@firm.co.uk"></div>' +
+      '<div class="form-group"><label class="form-label">Password *</label><input class="form-input" id="al-password" type="password" required placeholder="Min 8 chars + 1 number"></div>' +
+      '<div class="form-group"><label class="form-label">Role</label><select class="form-select" id="al-role"><option value="associate">Associate</option><option value="partner">Partner</option></select></div>' +
+      '<button type="submit" class="btn btn-gold" style="width:100%;">Add Lawyer</button>' +
+      '<div id="al-error" class="form-error"></div></form>');
+    ov.classList.add('active');
+    document.getElementById('add-lawyer-form').addEventListener('submit', async function(e) {
+      e.preventDefault();
+      try {
+        await api('/api/lawyers', { method:'POST', body: JSON.stringify({
+          name: document.getElementById('al-name').value,
+          email: document.getElementById('al-email').value,
+          password: document.getElementById('al-password').value,
+          role: document.getElementById('al-role').value
+        })});
+        ov.classList.remove('active'); loadLawyersView();
+      } catch(err) { var e2=document.getElementById('al-error'); setText(e2,(err.data&&err.data.error)||'Failed'); e2.classList.add('visible'); }
+    });
+  };
+
+  // ---- CHANGE PASSWORD ----
+  window.showChangePassword = function() {
+    var ov = document.getElementById('modal-case-detail');
+    setHtml(document.getElementById('modal-case-detail-body'),
+      '<h2 style="font-family:var(--font-display);font-size:1.5rem;color:var(--text);margin-bottom:20px;">Change Password</h2>' +
+      '<form id="change-pw-form"><div class="form-group"><label class="form-label">Current Password</label><input class="form-input" id="cp-current" type="password" required></div>' +
+      '<div class="form-group"><label class="form-label">New Password</label><input class="form-input" id="cp-new" type="password" required placeholder="Min 8 chars + 1 number"></div>' +
+      '<div class="form-group"><label class="form-label">Confirm New Password</label><input class="form-input" id="cp-confirm" type="password" required></div>' +
+      '<button type="submit" class="btn btn-gold" style="width:100%;">Update Password</button>' +
+      '<div id="cp-error" class="form-error"></div>' +
+      '<div id="cp-success" style="color:var(--success);font-size:13px;text-align:center;margin-top:12px;display:none;">Password updated successfully.</div></form>');
+    ov.classList.add('active');
+    document.getElementById('change-pw-form').addEventListener('submit', async function(e) {
+      e.preventDefault();
+      var newPw = document.getElementById('cp-new').value;
+      var confirm = document.getElementById('cp-confirm').value;
+      if (newPw !== confirm) { var e2=document.getElementById('cp-error'); setText(e2,'Passwords do not match.'); e2.classList.add('visible'); return; }
+      try {
+        await api('/api/auth/change-password', { method:'POST', body: JSON.stringify({
+          current_password: document.getElementById('cp-current').value,
+          new_password: newPw
+        })});
+        document.getElementById('cp-success').style.display = 'block';
+        document.getElementById('cp-error').classList.remove('visible');
+      } catch(err) { var e3=document.getElementById('cp-error'); setText(e3,(err.data&&err.data.error)||'Failed'); e3.classList.add('visible'); }
+    });
+  };
+
+  // ---- HAMBURGER MENU (mobile) ----
+  var hamburger = document.getElementById('hamburger-btn');
+  var mobileOverlay = document.getElementById('mobile-overlay');
+  if (hamburger) hamburger.addEventListener('click', function() {
+    document.querySelector('.sidebar').classList.toggle('mobile-open');
+    mobileOverlay.classList.toggle('active');
+  });
+  if (mobileOverlay) mobileOverlay.addEventListener('click', function() {
+    document.querySelector('.sidebar').classList.remove('mobile-open');
+    mobileOverlay.classList.remove('active');
+  });
+
+  // ---- COOKIE CONSENT ----
+  (function() {
+    if (!localStorage.getItem('counsel_cookie_consent')) {
+      var banner = document.getElementById('cookie-banner');
+      if (banner) banner.style.display = 'flex';
+    }
+    var btn = document.getElementById('cookie-accept-btn');
+    if (btn) btn.addEventListener('click', function() {
+      localStorage.setItem('counsel_cookie_consent', 'true');
+      document.getElementById('cookie-banner').style.display = 'none';
+    });
+  })();
 
   // ---- Init ----
   (function() {

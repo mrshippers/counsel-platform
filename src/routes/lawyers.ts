@@ -3,11 +3,72 @@ import type { AppEnv } from "../index";
 import { authMiddleware } from "../middleware/auth";
 import { partnerOnly } from "../middleware/rbac";
 import { createSupabaseAdmin } from "../lib/supabase";
+import { hashPassword, validatePassword } from "../lib/password";
+import { logAuditEvent } from "../middleware/audit";
 
 export const lawyersRoutes = new Hono<AppEnv>();
 
 lawyersRoutes.use("*", authMiddleware);
 lawyersRoutes.use("*", partnerOnly()); // Partner-only section
+
+// POST /api/lawyers — add new lawyer to firm
+lawyersRoutes.post("/", async (c) => {
+  const user = c.get("user");
+  const body = await c.req.json().catch(() => ({}));
+
+  // Validate required fields
+  if (!body.name || !body.email || !body.password || !body.role) {
+    return c.json({ error: "name, email, password, and role are required" }, 400);
+  }
+
+  // Validate role
+  if (!["partner", "associate"].includes(body.role)) {
+    return c.json({ error: "role must be 'partner' or 'associate'" }, 400);
+  }
+
+  // Validate password strength
+  const pwError = validatePassword(body.password);
+  if (pwError) {
+    return c.json({ error: pwError }, 400);
+  }
+
+  // Hash password
+  const password_hash = await hashPassword(body.password);
+
+  const supabase = createSupabaseAdmin(c.env);
+
+  // Build initials from name
+  const nameParts = body.name.trim().split(/\s+/);
+  const avatar_initials = nameParts.length >= 2
+    ? (nameParts[0][0] + nameParts[nameParts.length - 1][0]).toUpperCase()
+    : body.name.slice(0, 2).toUpperCase();
+
+  // Insert user — firm_id always from JWT, never from request body
+  const { data: newUser, error: insertError } = await supabase
+    .from("users")
+    .insert({
+      firm_id: user.firm_id,
+      name: body.name,
+      email: body.email,
+      password_hash,
+      role: body.role,
+      avatar_initials,
+      active: true,
+    })
+    .select()
+    .single();
+
+  if (insertError || !newUser) {
+    return c.json({ error: "Failed to create lawyer" }, 500);
+  }
+
+  await logAuditEvent(c, "lawyer_added", "user", newUser.id);
+
+  // Strip password_hash from response
+  const { password_hash: _ph, ...safeUser } = newUser as Record<string, unknown>;
+
+  return c.json({ data: safeUser }, 201);
+});
 
 // GET /api/lawyers — list firm lawyers with workload stats
 lawyersRoutes.get("/", async (c) => {
