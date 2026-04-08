@@ -19,7 +19,7 @@ dashboardRoutes.get("/", async (c) => {
       // All active cases for firm
       supabase
         .from("cases")
-        .select("*, clients(name), users(name, avatar_initials)")
+        .select("*, clients(first_name, last_name, reference_number), users(name, avatar_initials)")
         .eq("firm_id", firmId)
         .neq("status", "completed")
         .order("deadline", { ascending: true }),

@@ -122,7 +122,7 @@ describe("GDPR — SAR Export", () => {
   it("SAR export returns all client data as JSON", async () => {
     // 1. Verify client belongs to firm
     mockResponses.push({
-      data: { id: "cl1", firm_id: TEST_FIRM_A.id, name: "John Smith", email: "john@example.com" },
+      data: { id: "cl1", firm_id: TEST_FIRM_A.id, first_name: "John", last_name: "Smith", email: "john@example.com", reference_number: "CLT-0001" },
       error: null,
     });
     // 2. Fetch cases for client
@@ -163,7 +163,8 @@ describe("GDPR — SAR Export", () => {
     expect(res.status).toBe(200);
     const body = await res.json();
     expect(body.client).toBeDefined();
-    expect(body.client.name).toBe("John Smith");
+    expect(body.client.first_name).toBe("John");
+    expect(body.client.last_name).toBe("Smith");
     expect(body.cases).toHaveLength(2);
     expect(body.tasks).toHaveLength(3);
     expect(body.documents).toHaveLength(1);

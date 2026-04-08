@@ -34,14 +34,28 @@ CREATE TABLE users (
   updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
+-- Client reference number sequence (per-firm, auto-generated CLT-0001 format)
+CREATE SEQUENCE client_ref_seq START 1;
+
 -- Clients
 CREATE TABLE clients (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   firm_id UUID NOT NULL REFERENCES firms(id) ON DELETE CASCADE,
-  name TEXT NOT NULL,
+  reference_number TEXT NOT NULL UNIQUE,
+  first_name TEXT NOT NULL,
+  last_name TEXT NOT NULL,
+  date_of_birth DATE,
   email TEXT,
-  phone TEXT,
-  type TEXT NOT NULL DEFAULT 'individual' CHECK (type IN ('individual','corporate')),
+  mobile_phone TEXT,
+  landline_phone TEXT,
+  address_line_1 TEXT,
+  address_line_2 TEXT,
+  city TEXT,
+  county TEXT,
+  postcode TEXT,
+  national_insurance_number TEXT,
+  company_number TEXT,
+  client_type TEXT NOT NULL DEFAULT 'personal' CHECK (client_type IN ('personal','business')),
   notes TEXT,
   created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
   updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
@@ -129,6 +143,8 @@ CREATE TABLE password_resets (
 CREATE INDEX idx_users_firm ON users(firm_id);
 CREATE INDEX idx_users_email ON users(email);
 CREATE INDEX idx_clients_firm ON clients(firm_id);
+CREATE INDEX idx_clients_reference ON clients(reference_number);
+CREATE INDEX idx_clients_name ON clients(firm_id, last_name, first_name);
 CREATE INDEX idx_cases_firm ON cases(firm_id);
 CREATE INDEX idx_cases_lawyer ON cases(lawyer_id);
 CREATE INDEX idx_cases_client ON cases(client_id);

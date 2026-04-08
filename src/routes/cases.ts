@@ -26,7 +26,7 @@ casesRoutes.get("/", async (c) => {
 
   let query = supabase
     .from("cases")
-    .select("*, clients(name), users(name, avatar_initials)")
+    .select("*, clients(first_name, last_name, reference_number), users(name, avatar_initials)")
     .eq("firm_id", user.firm_id);
 
   // Associate: only their assigned cases
@@ -77,13 +77,25 @@ casesRoutes.post("/", async (c) => {
 
   // Verify client and lawyer belong to this firm
   const [clientCheck, lawyerCheck] = await Promise.all([
-    supabase.from("clients").select("id").eq("id", body.client_id).eq("firm_id", user.firm_id).single(),
+    supabase.from("clients").select("id, first_name, last_name").eq("id", body.client_id).eq("firm_id", user.firm_id).single(),
     supabase.from("users").select("id").eq("id", body.lawyer_id).eq("firm_id", user.firm_id).single(),
   ]);
 
   if (!clientCheck.data || !lawyerCheck.data) {
     return c.json({ error: "Invalid client or lawyer for this firm" }, 400);
   }
+
+  // Conflict of interest check — warn if client has other active cases
+  const { data: activeCases } = await supabase
+    .from("cases")
+    .select("id, title")
+    .eq("client_id", body.client_id)
+    .eq("firm_id", user.firm_id)
+    .in("status", ["pending", "in_progress"]);
+
+  const conflictWarning = (activeCases && activeCases.length > 0)
+    ? `Warning: This client already has ${activeCases.length} active case(s).`
+    : null;
 
   // Create case — firm_id ALWAYS from JWT, never from request body
   const { data: newCase, error: caseError } = await supabase
@@ -120,7 +132,7 @@ casesRoutes.post("/", async (c) => {
   // Audit log
   await logAuditEvent(c, "case_created", "case", newCase.id);
 
-  return c.json({ data: newCase }, 201);
+  return c.json({ data: newCase, conflict_warning: conflictWarning }, 201);
 });
 
 // GET /api/cases/:id — get single case
@@ -131,7 +143,7 @@ casesRoutes.get("/:id", async (c) => {
 
   const { data, error } = await supabase
     .from("cases")
-    .select("*, clients(name, email, phone), users(name, avatar_initials), tasks(*)")
+    .select("*, clients(first_name, last_name, reference_number, email, mobile_phone, landline_phone, client_type), users(name, avatar_initials), tasks(*)")
     .eq("id", caseId)
     .eq("firm_id", user.firm_id) // Firm isolation
     .single();

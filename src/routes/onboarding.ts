@@ -59,10 +59,28 @@ onboardingRoutes.post("/", async (c) => {
 
   // Optionally create first case with client
   if (body.first_case_title && body.first_case_type && body.first_client_name) {
+    // Parse client name into first/last
+    const nameParts = body.first_client_name.trim().split(/\s+/);
+    const clientFirstName = nameParts[0] || body.first_client_name;
+    const clientLastName = nameParts.length > 1 ? nameParts.slice(1).join(" ") : "";
+
+    // Generate reference number
+    const { count: clientCount } = await supabase
+      .from("clients")
+      .select("*", { count: "exact", head: true })
+      .eq("firm_id", firm.id);
+    const refNum = `CLT-${String((clientCount || 0) + 1).padStart(4, "0")}`;
+
     // Create client
     const { data: client } = await supabase
       .from("clients")
-      .insert({ firm_id: firm.id, name: body.first_client_name })
+      .insert({
+        firm_id: firm.id,
+        reference_number: refNum,
+        first_name: clientFirstName,
+        last_name: clientLastName,
+        client_type: "personal",
+      })
       .select()
       .single();
 

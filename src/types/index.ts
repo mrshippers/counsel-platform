@@ -29,10 +29,21 @@ export interface User {
 export interface Client {
   id: string;
   firm_id: string;
-  name: string;
+  reference_number: string;
+  first_name: string;
+  last_name: string;
+  date_of_birth: string | null;
   email: string | null;
-  phone: string | null;
-  type: "individual" | "corporate";
+  mobile_phone: string | null;
+  landline_phone: string | null;
+  address_line_1: string | null;
+  address_line_2: string | null;
+  city: string | null;
+  county: string | null;
+  postcode: string | null;
+  national_insurance_number: string | null;
+  company_number: string | null;
+  client_type: "personal" | "business";
   notes: string | null;
   created_at: string;
   updated_at: string;
@@ -146,10 +157,20 @@ export interface CreateCaseRequest {
 }
 
 export interface CreateClientRequest {
-  name: string;
+  first_name: string;
+  last_name: string;
+  date_of_birth?: string;
   email?: string;
-  phone?: string;
-  type?: "individual" | "corporate";
+  mobile_phone?: string;
+  landline_phone?: string;
+  address_line_1?: string;
+  address_line_2?: string;
+  city?: string;
+  county?: string;
+  postcode?: string;
+  national_insurance_number?: string;
+  company_number?: string;
+  client_type?: "personal" | "business";
   notes?: string;
 }
 

@@ -248,25 +248,26 @@ describe("Clients — Update", () => {
   });
 
   it("PATCH /api/clients/:id updates client fields", async () => {
-    mockResponses.push({ data: { id: "cl1", firm_id: TEST_FIRM_A.id, name: "Old Name" }, error: null });
-    mockResponses.push({ data: { id: "cl1", name: "New Name", email: "new@example.com" }, error: null });
+    mockResponses.push({ data: { id: "cl1", firm_id: TEST_FIRM_A.id, first_name: "Old", last_name: "Name" }, error: null });
+    mockResponses.push({ data: { id: "cl1", first_name: "New", last_name: "Name", email: "new@example.com" }, error: null });
     mockResponses.push({ data: null, error: null }); // audit
 
     const res = await authedReq("PATCH", "/api/clients/cl1", partnerTokenPayload(), {
-      name: "New Name",
+      first_name: "New",
+      last_name: "Name",
       email: "new@example.com",
     });
 
     expect(res.status).toBe(200);
     const body = await res.json();
-    expect(body.data.name).toBe("New Name");
+    expect(body.data.first_name).toBe("New");
   });
 
   it("rejects update to client in another firm", async () => {
     mockResponses.push({ data: null, error: { message: "not found" } });
 
     const res = await authedReq("PATCH", "/api/clients/cl1", firmBTokenPayload(), {
-      name: "Hacked",
+      first_name: "Hacked",
     });
 
     expect(res.status).toBe(404);
@@ -279,7 +280,7 @@ describe("Clients — Update", () => {
 
     await authedReq("PATCH", "/api/clients/cl1", partnerTokenPayload(), {
       firm_id: "bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb",
-      name: "Legit",
+      first_name: "Legit",
     });
 
     const clientUpdate = mockUpdateLog.find((u) => u.table === "clients");
@@ -534,13 +535,19 @@ describe("Security — Input sanitization", () => {
 
   it("XSS attempt in client name is stored as-is (escaped on render)", async () => {
     mockResponses.push({
-      data: { id: "cl-new", firm_id: TEST_FIRM_A.id, name: '<script>alert("xss")</script>' },
+      data: [{ count: 0 }],
+      count: 0,
+      error: null,
+    }); // count for reference number
+    mockResponses.push({
+      data: { id: "cl-new", firm_id: TEST_FIRM_A.id, first_name: '<script>alert("xss")</script>', last_name: 'Test', reference_number: 'CLT-0001' },
       error: null,
     });
     mockResponses.push({ data: null, error: null }); // audit
 
     const res = await authedReq("POST", "/api/clients", partnerTokenPayload(), {
-      name: '<script>alert("xss")</script>',
+      first_name: '<script>alert("xss")</script>',
+      last_name: 'Test',
     });
 
     // API stores the value — XSS prevention is frontend's responsibility
