@@ -195,3 +195,89 @@ CREATE POLICY firm_isolation_documents ON documents FOR ALL USING (
 CREATE POLICY firm_isolation_deadlines ON deadlines FOR ALL USING (firm_id = (current_setting('app.firm_id', true))::uuid);
 CREATE POLICY audit_log_insert_only ON audit_log FOR INSERT WITH CHECK (firm_id = (current_setting('app.firm_id', true))::uuid);
 CREATE POLICY audit_log_read ON audit_log FOR SELECT USING (firm_id = (current_setting('app.firm_id', true))::uuid);
+
+-- Time Entries (billable hours)
+CREATE TABLE time_entries (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  firm_id UUID NOT NULL REFERENCES firms(id) ON DELETE CASCADE,
+  case_id UUID NOT NULL REFERENCES cases(id) ON DELETE CASCADE,
+  lawyer_id UUID NOT NULL REFERENCES users(id),
+  description TEXT NOT NULL,
+  duration_minutes INTEGER NOT NULL CHECK (duration_minutes > 0),
+  date DATE NOT NULL DEFAULT CURRENT_DATE,
+  billable BOOLEAN NOT NULL DEFAULT true,
+  rate_pence INTEGER NOT NULL CHECK (rate_pence >= 0),
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+-- Conflict Parties (SRA conflict of interest tracking)
+CREATE TABLE conflict_parties (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  firm_id UUID NOT NULL REFERENCES firms(id) ON DELETE CASCADE,
+  case_id UUID REFERENCES cases(id) ON DELETE CASCADE,
+  client_id UUID REFERENCES clients(id) ON DELETE SET NULL,
+  party_name TEXT NOT NULL,
+  party_type TEXT NOT NULL CHECK (party_type IN ('client','opposing','witness','related')),
+  notes TEXT,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+-- Indexes for new tables
+CREATE INDEX idx_time_entries_firm ON time_entries(firm_id);
+CREATE INDEX idx_time_entries_case ON time_entries(case_id);
+CREATE INDEX idx_time_entries_lawyer ON time_entries(lawyer_id);
+CREATE INDEX idx_time_entries_date ON time_entries(date);
+CREATE INDEX idx_conflict_parties_firm ON conflict_parties(firm_id);
+CREATE INDEX idx_conflict_parties_case ON conflict_parties(case_id);
+CREATE INDEX idx_conflict_parties_name ON conflict_parties(party_name);
+
+-- Triggers for new tables
+CREATE TRIGGER set_updated_at_time_entries BEFORE UPDATE ON time_entries FOR EACH ROW EXECUTE FUNCTION update_updated_at();
+CREATE TRIGGER set_updated_at_conflict_parties BEFORE UPDATE ON conflict_parties FOR EACH ROW EXECUTE FUNCTION update_updated_at();
+
+-- RLS for new tables
+ALTER TABLE time_entries ENABLE ROW LEVEL SECURITY;
+ALTER TABLE conflict_parties ENABLE ROW LEVEL SECURITY;
+CREATE POLICY firm_isolation_time_entries ON time_entries FOR ALL USING (firm_id = (current_setting('app.firm_id', true))::uuid);
+CREATE POLICY firm_isolation_conflict_parties ON conflict_parties FOR ALL USING (firm_id = (current_setting('app.firm_id', true))::uuid);
+
+-- Case Emails (filed emails linked to cases)
+CREATE TABLE case_emails (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  firm_id UUID NOT NULL REFERENCES firms(id) ON DELETE CASCADE,
+  case_id UUID NOT NULL REFERENCES cases(id) ON DELETE CASCADE,
+  filed_by UUID NOT NULL REFERENCES users(id),
+  subject TEXT NOT NULL,
+  from_address TEXT NOT NULL,
+  body TEXT,
+  received_date TIMESTAMPTZ DEFAULT now(),
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+-- Client Portal Tokens (self-serve access for clients)
+CREATE TABLE client_portal_tokens (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  firm_id UUID NOT NULL REFERENCES firms(id) ON DELETE CASCADE,
+  client_id UUID NOT NULL REFERENCES clients(id) ON DELETE CASCADE,
+  token TEXT NOT NULL UNIQUE,
+  expires_at TIMESTAMPTZ NOT NULL,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+-- Indexes
+CREATE INDEX idx_case_emails_firm ON case_emails(firm_id);
+CREATE INDEX idx_case_emails_case ON case_emails(case_id);
+CREATE INDEX idx_client_portal_tokens_token ON client_portal_tokens(token);
+CREATE INDEX idx_client_portal_tokens_client ON client_portal_tokens(client_id);
+
+-- Triggers
+CREATE TRIGGER set_updated_at_case_emails BEFORE UPDATE ON case_emails FOR EACH ROW EXECUTE FUNCTION update_updated_at();
+
+-- RLS
+ALTER TABLE case_emails ENABLE ROW LEVEL SECURITY;
+ALTER TABLE client_portal_tokens ENABLE ROW LEVEL SECURITY;
+CREATE POLICY firm_isolation_case_emails ON case_emails FOR ALL USING (firm_id = (current_setting('app.firm_id', true))::uuid);
+CREATE POLICY firm_isolation_client_portal_tokens ON client_portal_tokens FOR ALL USING (firm_id = (current_setting('app.firm_id', true))::uuid);

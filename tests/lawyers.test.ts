@@ -112,6 +112,10 @@ describe("POST /api/lawyers — Add new lawyer", () => {
   });
 
   it("POST /api/lawyers creates new lawyer", async () => {
+    // Firm plan check
+    mockResponses.push({ data: { id: TEST_FIRM_A.id, plan: "professional" }, error: null });
+    // Current user count (3 of 10 — under limit)
+    mockResponses.push({ data: [{ id: "u1" }, { id: "u2" }, { id: "u3" }], error: null });
     // Insert user
     mockResponses.push({
       data: {

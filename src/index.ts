@@ -15,6 +15,13 @@ import { onboardingRoutes } from "./routes/onboarding";
 import { exportRoutes } from "./routes/export";
 import { gdprRoutes } from "./routes/gdpr";
 import { pricingRoutes } from "./routes/pricing";
+import { timeEntriesRoutes } from "./routes/time-entries";
+import { conflictsRoutes } from "./routes/conflicts";
+import { billingRoutes } from "./routes/billing";
+import { invoicesRoutes } from "./routes/invoices";
+import { emailsRoutes } from "./routes/emails";
+import { ukServicesRoutes } from "./routes/uk-services";
+import { portalRoutes } from "./routes/portal";
 import { validateBodyLengths } from "./middleware/validate";
 import { rateLimitAuth } from "./middleware/validate";
 
@@ -69,6 +76,13 @@ app.route("/api/onboarding", onboardingRoutes);
 app.route("/api/export", exportRoutes);
 app.route("/api/gdpr", gdprRoutes);
 app.route("/api/pricing", pricingRoutes);
+app.route("/api/time-entries", timeEntriesRoutes);
+app.route("/api/conflicts", conflictsRoutes);
+app.route("/api/billing", billingRoutes);
+app.route("/api/invoices", invoicesRoutes);
+app.route("/api/emails", emailsRoutes);
+app.route("/api/uk", ukServicesRoutes);
+app.route("/api/portal", portalRoutes);
 
 // Serve frontend HTML for non-API routes
 app.get("*", async (c) => {

@@ -11,17 +11,18 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "hono": "^4.7.0",
     "@supabase/supabase-js": "^2.49.0",
+    "hono": "^4.7.0",
+    "jose": "^6.0.0",
     "resend": "^4.1.0",
-    "jose": "^6.0.0"
+    "stripe": "^22.0.0"
   },
   "devDependencies": {
+    "@cloudflare/vitest-pool-workers": "^0.8.0",
     "@cloudflare/workers-types": "^4.20250327.0",
+    "miniflare": "^4.0.0",
     "typescript": "^5.8.0",
     "vitest": "^3.1.0",
-    "wrangler": "^4.6.0",
-    "@cloudflare/vitest-pool-workers": "^0.8.0",
-    "miniflare": "^4.0.0"
+    "wrangler": "^4.6.0"
   }
 }

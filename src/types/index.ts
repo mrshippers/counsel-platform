@@ -114,6 +114,56 @@ export interface AuditLogEntry {
   timestamp: string;
 }
 
+export interface TimeEntry {
+  id: string;
+  firm_id: string;
+  case_id: string;
+  lawyer_id: string;
+  description: string;
+  duration_minutes: number;
+  date: string;
+  billable: boolean;
+  rate_pence: number;
+  created_at: string;
+  updated_at: string;
+}
+
+export type ConflictPartyType = "client" | "opposing" | "witness" | "related";
+
+export interface ConflictParty {
+  id: string;
+  firm_id: string;
+  case_id: string | null;
+  client_id: string | null;
+  party_name: string;
+  party_type: ConflictPartyType;
+  notes: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface CaseEmail {
+  id: string;
+  firm_id: string;
+  case_id: string;
+  filed_by: string;
+  subject: string;
+  from_address: string;
+  body: string | null;
+  received_date: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface ClientPortalToken {
+  id: string;
+  firm_id: string;
+  client_id: string;
+  token: string;
+  expires_at: string;
+  created_at: string;
+}
+
 // -- API types --
 
 export interface LoginRequest {
@@ -159,6 +209,9 @@ export interface Env {
   SUPABASE_SERVICE_ROLE_KEY: string;
   JWT_SECRET: string;
   RESEND_API_KEY: string;
+  STRIPE_SECRET_KEY: string;
+  STRIPE_WEBHOOK_SECRET: string;
+  COMPANIES_HOUSE_API_KEY: string;
   ENVIRONMENT: string;
 }
 

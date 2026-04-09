@@ -3,6 +3,7 @@ import type { AppEnv } from "../index";
 import { authMiddleware } from "../middleware/auth";
 import { createSupabaseAdmin } from "../lib/supabase";
 import { logAuditEvent } from "../middleware/audit";
+import { createEmailClient, sendDeadlineReminder } from "../lib/email";
 
 export const deadlinesRoutes = new Hono<AppEnv>();
 
@@ -132,7 +133,27 @@ deadlinesRoutes.post("/send-reminders", async (c) => {
     });
   }
 
-  return c.json({ reminders, skipped, total: (deadlines || []).length }, 200);
+  // Send reminder emails via Resend
+  let emailsSent = 0;
+  const emailClient = createEmailClient(c.env);
+  for (const reminder of reminders) {
+    try {
+      await sendDeadlineReminder(
+        emailClient,
+        reminder.lawyer_email,
+        reminder.lawyer_name,
+        reminder.case_title,
+        "", // client name not available in this context
+        reminder.deadline_date,
+        reminder.deadline_id
+      );
+      emailsSent++;
+    } catch {
+      // Log but don't fail the whole batch
+    }
+  }
+
+  return c.json({ reminders, skipped, emails_sent: emailsSent, total: (deadlines || []).length }, 200);
 });
 
 // PATCH /api/deadlines/:id — update deadline (firm-scoped)

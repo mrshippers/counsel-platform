@@ -4,6 +4,7 @@ import { createSupabaseAdmin } from "../lib/supabase";
 import { verifyPassword, hashPassword, validatePassword } from "../lib/password";
 import { authMiddleware, signJWT } from "../middleware/auth";
 import { logAuditEvent } from "../middleware/audit";
+import { createEmailClient, sendPasswordResetEmail } from "../lib/email";
 import type { LoginRequest } from "../types";
 
 export const authRoutes = new Hono<AppEnv>();
@@ -138,8 +139,14 @@ authRoutes.post("/password-reset", async (c) => {
       expires_at: expiresAt,
     });
 
-    // TODO: Send email via Resend (Phase 5)
-    // await sendPasswordResetEmail(emailClient, user.email, user.name, resetToken, baseUrl);
+    // Send password reset email via Resend
+    const emailClient = createEmailClient(c.env);
+    const baseUrl = "https://counsel-app.co.uk";
+    try {
+      await sendPasswordResetEmail(emailClient, user.email, user.name, resetToken, baseUrl);
+    } catch {
+      // Log but don't reveal email failure to user (security)
+    }
   }
 
   return c.json({ message: "If the email exists, a reset link has been sent." }, 200);

@@ -37,6 +37,45 @@ lawyersRoutes.post("/", async (c) => {
 
   const supabase = createSupabaseAdmin(c.env);
 
+  // Plan limit enforcement
+  const PLAN_LIMITS: Record<string, number> = {
+    solo: 1,
+    starter: 5,
+    professional: 10,
+    enterprise: 20,
+  };
+  const PLAN_UPGRADES: Record<string, string> = {
+    solo: "starter",
+    starter: "professional",
+    professional: "enterprise",
+  };
+
+  const { data: firm } = await supabase
+    .from("firms")
+    .select("id, plan")
+    .eq("id", user.firm_id)
+    .single();
+
+  const firmPlan = (firm?.plan as string) || "solo";
+  const maxUsers = PLAN_LIMITS[firmPlan] || 1;
+
+  const { data: existingUsers } = await supabase
+    .from("users")
+    .select("id")
+    .eq("firm_id", user.firm_id)
+    .order("created_at", { ascending: true });
+
+  const currentCount = (existingUsers || []).length;
+
+  if (currentCount >= maxUsers) {
+    return c.json({
+      error: `Plan limit reached. Your ${firmPlan} plan allows ${maxUsers} user(s).`,
+      max_users: maxUsers,
+      current_users: currentCount,
+      upgrade_to: PLAN_UPGRADES[firmPlan] || null,
+    }, 403);
+  }
+
   // Build initials from name
   const nameParts = body.name.trim().split(/\s+/);
   const avatar_initials = nameParts.length >= 2
