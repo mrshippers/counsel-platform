@@ -33,6 +33,7 @@ export interface Client {
   email: string | null;
   phone: string | null;
   type: "individual" | "corporate";
+  companies_house_number: string | null;
   notes: string | null;
   created_at: string;
   updated_at: string;
@@ -164,6 +165,37 @@ export interface ClientPortalToken {
   created_at: string;
 }
 
+export interface UserInvite {
+  id: string;
+  firm_id: string;
+  email: string;
+  name: string;
+  role: "partner" | "associate";
+  token: string;
+  expires_at: string;
+  accepted_at: string | null;
+  invited_by: string;
+  created_at: string;
+}
+
+export interface Invoice {
+  id: string;
+  firm_id: string;
+  case_id: string;
+  invoice_number: string;
+  invoice_date: string;
+  subtotal_pence: number;
+  vat_rate: number;
+  vat_pence: number;
+  total_pence: number;
+  stripe_payment_link: string | null;
+  stripe_payment_link_id: string | null;
+  paid_at: string | null;
+  created_by: string;
+  created_at: string;
+  updated_at: string;
+}
+
 // -- API types --
 
 export interface LoginRequest {
@@ -213,6 +245,7 @@ export interface Env {
   STRIPE_WEBHOOK_SECRET: string;
   COMPANIES_HOUSE_API_KEY: string;
   ENVIRONMENT: string;
+  R2_DOCUMENTS: R2Bucket;
 }
 
 // Default tasks auto-created with every new case

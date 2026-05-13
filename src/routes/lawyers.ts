@@ -5,6 +5,7 @@ import { partnerOnly } from "../middleware/rbac";
 import { createSupabaseAdmin } from "../lib/supabase";
 import { hashPassword, validatePassword } from "../lib/password";
 import { logAuditEvent } from "../middleware/audit";
+import { createEmailClient, sendInviteEmail } from "../lib/email";
 
 export const lawyersRoutes = new Hono<AppEnv>();
 
@@ -107,6 +108,111 @@ lawyersRoutes.post("/", async (c) => {
   const { password_hash: _ph, ...safeUser } = newUser as Record<string, unknown>;
 
   return c.json({ data: safeUser }, 201);
+});
+
+// POST /api/lawyers/invite — send email invite (user sets own password)
+lawyersRoutes.post("/invite", async (c) => {
+  const user = c.get("user");
+  const body = await c.req.json().catch(() => ({}));
+
+  if (!body.name || !body.email || !body.role) {
+    return c.json({ error: "name, email, and role are required" }, 400);
+  }
+  if (!["partner", "associate"].includes(body.role)) {
+    return c.json({ error: "role must be 'partner' or 'associate'" }, 400);
+  }
+
+  const supabase = createSupabaseAdmin(c.env);
+
+  // Check plan limits (pending invites count toward the limit)
+  const PLAN_LIMITS: Record<string, number> = {
+    solo: 1, starter: 5, professional: 10, enterprise: 20,
+  };
+  const { data: firm } = await supabase
+    .from("firms")
+    .select("id, name, plan")
+    .eq("id", user.firm_id)
+    .single();
+
+  if (!firm) return c.json({ error: "Firm not found" }, 404);
+
+  const firmPlan = (firm.plan as string) || "solo";
+  const maxUsers = PLAN_LIMITS[firmPlan] || 1;
+
+  const { data: existingUsers } = await supabase
+    .from("users")
+    .select("id")
+    .eq("firm_id", user.firm_id);
+
+  if ((existingUsers || []).length >= maxUsers) {
+    return c.json({ error: `Plan limit reached (${maxUsers} users on ${firmPlan} plan).` }, 403);
+  }
+
+  // Check if email already in use
+  const { data: existingUser } = await supabase
+    .from("users")
+    .select("id")
+    .eq("email", body.email)
+    .single();
+
+  if (existingUser) {
+    return c.json({ error: "A user with this email already exists" }, 409);
+  }
+
+  // Generate 256-bit invite token
+  const rawToken = crypto.getRandomValues(new Uint8Array(32));
+  const inviteToken = Array.from(rawToken).map(b => b.toString(16).padStart(2, "0")).join("");
+  const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(); // 7 days
+
+  const { data: invite, error: inviteError } = await supabase
+    .from("user_invites")
+    .insert({
+      firm_id: user.firm_id,
+      email: body.email,
+      name: body.name,
+      role: body.role,
+      token: inviteToken,
+      expires_at: expiresAt,
+      invited_by: user.sub,
+    })
+    .select()
+    .single();
+
+  if (inviteError || !invite) {
+    return c.json({ error: "Failed to create invite" }, 500);
+  }
+
+  // Get inviter name for email
+  const { data: inviter } = await supabase
+    .from("users")
+    .select("name")
+    .eq("id", user.sub)
+    .single();
+
+  const baseUrl = "https://counsel-app.co.uk";
+  const emailClient = createEmailClient(c.env);
+  try {
+    await sendInviteEmail(
+      emailClient,
+      body.email,
+      body.name,
+      firm.name,
+      inviter?.name || "Your colleague",
+      inviteToken,
+      baseUrl
+    );
+  } catch {
+    // Email failure is non-fatal — invite is created, token can be shared manually
+  }
+
+  await logAuditEvent(c, "user_invited", "user_invite", invite.id);
+
+  return c.json({
+    message: "Invite sent",
+    invite_id: invite.id,
+    email: body.email,
+    expires_at: expiresAt,
+  }, 201);
 });
 
 // GET /api/lawyers — list firm lawyers with workload stats

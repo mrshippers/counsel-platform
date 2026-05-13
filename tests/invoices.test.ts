@@ -136,12 +136,17 @@ describe("Invoices — Generate", () => {
       ],
       error: null,
     });
+    // Invoice INSERT
+    mockResponses.push({
+      data: { id: "inv-1", firm_id: TEST_FIRM_A.id, case_id: "case-1" },
+      error: null,
+    });
 
     const res = await authedReq("POST", "/api/invoices/generate", partnerTokenPayload(), {
       case_id: "case-1",
     });
 
-    expect(res.status).toBe(200);
+    expect(res.status).toBe(201);
     const body = await res.json();
 
     // Only billable entries in line items
@@ -182,12 +187,14 @@ describe("Invoices — Generate", () => {
     });
     mockResponses.push({ data: { id: TEST_FIRM_A.id, name: "Test Firm" }, error: null });
     mockResponses.push({ data: [], error: null }); // no time entries
+    // Invoice INSERT
+    mockResponses.push({ data: { id: "inv-2", firm_id: TEST_FIRM_A.id, case_id: "case-1" }, error: null });
 
     const res = await authedReq("POST", "/api/invoices/generate", partnerTokenPayload(), {
       case_id: "case-1",
     });
 
-    expect(res.status).toBe(200);
+    expect(res.status).toBe(201);
     const body = await res.json();
     expect(body.invoice.line_items).toHaveLength(0);
     expect(body.invoice.subtotal_pence).toBe(0);
@@ -201,12 +208,14 @@ describe("Invoices — Generate", () => {
     });
     mockResponses.push({ data: { id: TEST_FIRM_A.id, name: "Firm" }, error: null });
     mockResponses.push({ data: [], error: null });
+    // Invoice INSERT
+    mockResponses.push({ data: { id: "inv-3", firm_id: TEST_FIRM_A.id, case_id: "case-1" }, error: null });
 
     const res = await authedReq("POST", "/api/invoices/generate", partnerTokenPayload(), {
       case_id: "case-1",
     });
 
-    expect(res.status).toBe(200);
+    expect(res.status).toBe(201);
     const body = await res.json();
     expect(body.invoice.invoice_number).toBeDefined();
     expect(body.invoice.invoice_date).toBeDefined();
@@ -224,13 +233,15 @@ describe("Invoices — Generate", () => {
       ],
       error: null,
     });
+    // Invoice INSERT
+    mockResponses.push({ data: { id: "inv-4", firm_id: TEST_FIRM_A.id, case_id: "case-1" }, error: null });
 
     const res = await authedReq("POST", "/api/invoices/generate", partnerTokenPayload(), {
       case_id: "case-1",
       vat_rate: 0, // VAT exempt
     });
 
-    expect(res.status).toBe(200);
+    expect(res.status).toBe(201);
     const body = await res.json();
     expect(body.invoice.vat_pence).toBe(0);
     expect(body.invoice.total_pence).toBe(10000);

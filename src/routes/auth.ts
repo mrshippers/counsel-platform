@@ -5,6 +5,7 @@ import { verifyPassword, hashPassword, validatePassword } from "../lib/password"
 import { authMiddleware, signJWT } from "../middleware/auth";
 import { logAuditEvent } from "../middleware/audit";
 import { createEmailClient, sendPasswordResetEmail } from "../lib/email";
+// POST /api/auth/accept-invite is defined below after the other auth routes
 import type { LoginRequest } from "../types";
 
 export const authRoutes = new Hono<AppEnv>();
@@ -218,6 +219,102 @@ authRoutes.post("/logout", authMiddleware, async (c) => {
   });
 
   return c.json({ message: "Logged out successfully" }, 200);
+});
+
+// POST /api/auth/accept-invite — invited user sets their own password on first login
+authRoutes.post("/accept-invite", async (c) => {
+  const body = await c.req.json<{ token: string; password: string }>().catch(() => ({
+    token: "",
+    password: "",
+  }));
+
+  if (!body.token) {
+    return c.json({ error: "token is required" }, 400);
+  }
+
+  const passwordError = validatePassword(body.password);
+  if (passwordError) {
+    return c.json({ error: passwordError }, 400);
+  }
+
+  const supabase = createSupabaseAdmin(c.env);
+
+  // Look up invite
+  const { data: invite } = await supabase
+    .from("user_invites")
+    .select("*")
+    .eq("token", body.token)
+    .single();
+
+  if (!invite) {
+    return c.json({ error: "Invalid or expired invite link" }, 400);
+  }
+  if (invite.accepted_at) {
+    return c.json({ error: "This invite has already been accepted" }, 400);
+  }
+  if (new Date(invite.expires_at) < new Date()) {
+    return c.json({ error: "This invite link has expired" }, 400);
+  }
+
+  // Check email not already taken (race condition guard)
+  const { data: existing } = await supabase
+    .from("users")
+    .select("id")
+    .eq("email", invite.email)
+    .single();
+
+  if (existing) {
+    return c.json({ error: "A user with this email already exists" }, 409);
+  }
+
+  // Create the user
+  const password_hash = await hashPassword(body.password);
+  const nameParts = invite.name.trim().split(/\s+/);
+  const avatar_initials = nameParts.length >= 2
+    ? (nameParts[0][0] + nameParts[nameParts.length - 1][0]).toUpperCase()
+    : invite.name.slice(0, 2).toUpperCase();
+
+  const { data: newUser, error: userError } = await supabase
+    .from("users")
+    .insert({
+      firm_id: invite.firm_id,
+      name: invite.name,
+      email: invite.email,
+      password_hash,
+      role: invite.role,
+      avatar_initials,
+      active: true,
+    })
+    .select()
+    .single();
+
+  if (userError || !newUser) {
+    return c.json({ error: "Failed to create account" }, 500);
+  }
+
+  // Mark invite accepted (single-use)
+  await supabase
+    .from("user_invites")
+    .update({ accepted_at: new Date().toISOString() })
+    .eq("token", body.token);
+
+  // Log
+  await supabase.from("audit_log").insert({
+    firm_id: invite.firm_id,
+    user_id: newUser.id,
+    action: "invite_accepted",
+    entity_type: "auth",
+  });
+
+  // Return JWT so the user is immediately logged in
+  const token = await signJWT(
+    { sub: newUser.id, firm_id: newUser.firm_id, role: newUser.role, email: newUser.email },
+    c.env.JWT_SECRET,
+    8
+  );
+
+  const { password_hash: _ph, ...safeUser } = newUser;
+  return c.json({ access_token: token, user: safeUser }, 201);
 });
 
 // POST /api/auth/change-password — authenticated password change

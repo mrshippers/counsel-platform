@@ -48,3 +48,27 @@ export async function sendPasswordResetEmail(
     `,
   });
 }
+
+export async function sendInviteEmail(
+  emailClient: Resend,
+  to: string,
+  name: string,
+  firmName: string,
+  invitedByName: string,
+  inviteToken: string,
+  baseUrl: string
+) {
+  const inviteUrl = `${baseUrl}/accept-invite?token=${inviteToken}`;
+  return emailClient.emails.send({
+    from: "Counsel <invites@counsel-app.co.uk>",
+    to,
+    subject: `You've been invited to join ${firmName} on Counsel`,
+    html: `
+      <p>Hi ${name},</p>
+      <p>${invitedByName} has invited you to join <strong>${firmName}</strong> on Counsel.</p>
+      <p><a href="${inviteUrl}" style="background:#1a1a2e;color:#fff;padding:10px 20px;text-decoration:none;border-radius:4px;display:inline-block">Accept invitation &amp; set password</a></p>
+      <p>This link expires in 7 days. If you weren't expecting this, ignore this email.</p>
+      <p>— Counsel</p>
+    `,
+  });
+}

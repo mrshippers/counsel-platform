@@ -22,8 +22,10 @@ import { invoicesRoutes } from "./routes/invoices";
 import { emailsRoutes } from "./routes/emails";
 import { ukServicesRoutes } from "./routes/uk-services";
 import { portalRoutes } from "./routes/portal";
+import { reportsRoutes } from "./routes/reports";
 import { validateBodyLengths } from "./middleware/validate";
 import { rateLimitAuth } from "./middleware/validate";
+import { createSupabaseAdmin } from "./lib/supabase";
 
 export type AppEnv = { Bindings: Env };
 
@@ -83,6 +85,7 @@ app.route("/api/invoices", invoicesRoutes);
 app.route("/api/emails", emailsRoutes);
 app.route("/api/uk", ukServicesRoutes);
 app.route("/api/portal", portalRoutes);
+app.route("/api/reports", reportsRoutes);
 
 // Serve frontend HTML for non-API routes
 app.get("*", async (c) => {
@@ -97,9 +100,55 @@ app.get("*", async (c) => {
 
 export default {
   fetch: app.fetch,
+
+  // Cloudflare Email Routing handler — receives emails sent to case-<uuid>@counsel-app.co.uk
+  async email(message: ForwardableEmailMessage, env: Env, _ctx: ExecutionContext) {
+    // Expect recipient format: case-<uuid>@counsel-app.co.uk
+    const match = message.to.match(/^case-([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})@/i);
+
+    if (!match) {
+      // Not a case address — reject silently
+      message.setReject("Unknown address");
+      return;
+    }
+
+    const caseId = match[1];
+    const supabase = createSupabaseAdmin(env);
+
+    const { data: caseData } = await supabase
+      .from("cases")
+      .select("id, firm_id, lawyer_id")
+      .eq("id", caseId)
+      .single();
+
+    if (!caseData) {
+      message.setReject("Case not found");
+      return;
+    }
+
+    const subject = message.headers.get("subject") || "(no subject)";
+
+    // Read raw email body (best-effort — full MIME stored for completeness)
+    let rawBody = "";
+    try {
+      rawBody = await new Response(message.raw).text();
+    } catch {
+      rawBody = "(body unavailable)";
+    }
+
+    await supabase.from("case_emails").insert({
+      firm_id: caseData.firm_id,
+      case_id: caseId,
+      filed_by: caseData.lawyer_id,
+      subject,
+      from_address: message.from,
+      body: rawBody,
+      received_date: new Date().toISOString(),
+    });
+  },
+
   async scheduled(_event: ScheduledEvent, _env: Env, _ctx: ExecutionContext) {
     // Daily 8am UTC — trigger deadline reminder emails
-    // Calls the deadlines/send-reminders logic internally
     const url = new URL("/api/deadlines/reminders", "http://internal");
     const req = new Request(url.toString(), { method: "POST" });
     await app.fetch(req, _env);

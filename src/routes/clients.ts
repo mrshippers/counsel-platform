@@ -45,6 +45,7 @@ clientsRoutes.post("/", async (c) => {
       email: body.email || null,
       phone: body.phone || null,
       type: body.type || "individual",
+      companies_house_number: body.companies_house_number || null,
       notes: body.notes || null,
     })
     .select()

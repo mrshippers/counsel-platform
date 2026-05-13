@@ -10,9 +10,18 @@ crons = ["0 8 * * *"]  # 8am UTC daily — deadline reminders
 [vars]
 ENVIRONMENT = "development"
 
+# R2 bucket for document storage
+# Create with: wrangler r2 bucket create counsel-documents
+[[r2_buckets]]
+binding = "R2_DOCUMENTS"
+bucket_name = "counsel-documents"
+
 # Secrets (set via `wrangler secret put`):
 # SUPABASE_URL
 # SUPABASE_ANON_KEY
 # SUPABASE_SERVICE_ROLE_KEY
 # JWT_SECRET
 # RESEND_API_KEY
+# STRIPE_SECRET_KEY
+# STRIPE_WEBHOOK_SECRET
+# COMPANIES_HOUSE_API_KEY
