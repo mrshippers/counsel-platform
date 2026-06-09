@@ -281,3 +281,44 @@ ALTER TABLE case_emails ENABLE ROW LEVEL SECURITY;
 ALTER TABLE client_portal_tokens ENABLE ROW LEVEL SECURITY;
 CREATE POLICY firm_isolation_case_emails ON case_emails FOR ALL USING (firm_id = (current_setting('app.firm_id', true))::uuid);
 CREATE POLICY firm_isolation_client_portal_tokens ON client_portal_tokens FOR ALL USING (firm_id = (current_setting('app.firm_id', true))::uuid);
+
+-- ============================================================
+-- MIGRATION: Enhanced client fields (Fabdi requirements)
+-- Run this after the initial schema in Supabase SQL Editor
+-- ============================================================
+
+-- Client reference sequence
+CREATE SEQUENCE IF NOT EXISTS client_ref_seq START 1;
+
+-- Auto-generate client_ref trigger function
+CREATE OR REPLACE FUNCTION generate_client_ref()
+RETURNS TRIGGER AS $$
+BEGIN
+  IF NEW.client_ref IS NULL THEN
+    NEW.client_ref = 'CLT-' || LPAD(NEXTVAL('client_ref_seq')::TEXT, 4, '0');
+  END IF;
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Add new columns to clients
+ALTER TABLE clients
+  ADD COLUMN IF NOT EXISTS first_name TEXT,
+  ADD COLUMN IF NOT EXISTS last_name TEXT,
+  ADD COLUMN IF NOT EXISTS date_of_birth DATE,
+  ADD COLUMN IF NOT EXISTS mobile TEXT,
+  ADD COLUMN IF NOT EXISTS landline TEXT,
+  ADD COLUMN IF NOT EXISTS address_line1 TEXT,
+  ADD COLUMN IF NOT EXISTS address_line2 TEXT,
+  ADD COLUMN IF NOT EXISTS city TEXT,
+  ADD COLUMN IF NOT EXISTS county TEXT,
+  ADD COLUMN IF NOT EXISTS postcode TEXT,
+  ADD COLUMN IF NOT EXISTS national_insurance_number TEXT,
+  ADD COLUMN IF NOT EXISTS companies_house_number TEXT,
+  ADD COLUMN IF NOT EXISTS client_ref TEXT UNIQUE;
+
+-- Auto-generate client_ref on insert
+DROP TRIGGER IF EXISTS set_client_ref ON clients;
+CREATE TRIGGER set_client_ref
+  BEFORE INSERT ON clients
+  FOR EACH ROW EXECUTE FUNCTION generate_client_ref();

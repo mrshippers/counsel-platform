@@ -33,8 +33,20 @@ export interface Client {
   email: string | null;
   phone: string | null;
   type: "individual" | "corporate";
-  companies_house_number: string | null;
   notes: string | null;
+  first_name: string | null;
+  last_name: string | null;
+  date_of_birth: string | null;
+  mobile: string | null;
+  landline: string | null;
+  address_line1: string | null;
+  address_line2: string | null;
+  city: string | null;
+  county: string | null;
+  postcode: string | null;
+  national_insurance_number: string | null;
+  companies_house_number: string | null;
+  client_ref: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -233,6 +245,18 @@ export interface CreateClientRequest {
   phone?: string;
   type?: "individual" | "corporate";
   notes?: string;
+  first_name?: string;
+  last_name?: string;
+  date_of_birth?: string;
+  mobile?: string;
+  landline?: string;
+  address_line1?: string;
+  address_line2?: string;
+  city?: string;
+  county?: string;
+  postcode?: string;
+  national_insurance_number?: string;
+  companies_house_number?: string;
 }
 
 export interface Env {

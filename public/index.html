@@ -717,9 +717,35 @@ body {
     <div id="create-case-error" class="form-error"></div>
     <form id="create-case-form">
       <div class="form-row">
-        <div class="form-group">
-          <label class="form-label" for="cc-client">Client</label>
-          <select class="form-select" id="cc-client" required><option value="">Select client...</option></select>
+        <div class="form-group" id="cc-client-section">
+          <label class="form-label">Client</label>
+          <div style="display:flex;gap:0;margin-bottom:10px;border-radius:8px;overflow:hidden;border:1px solid rgba(201,169,110,0.15);">
+            <button type="button" id="cc-client-mode-existing" onclick="switchClientMode('existing')" style="flex:1;padding:8px 12px;font-size:12px;font-weight:600;background:rgba(201,169,110,0.12);color:var(--gold);border:none;cursor:pointer;transition:.2s;">Existing Client</button>
+            <button type="button" id="cc-client-mode-new" onclick="switchClientMode('new')" style="flex:1;padding:8px 12px;font-size:12px;font-weight:600;background:transparent;color:var(--text-mut);border:none;cursor:pointer;transition:.2s;">+ New Client</button>
+          </div>
+          <div id="cc-existing-client-ui">
+            <select class="form-select" id="cc-client" required><option value="">Select client...</option></select>
+            <div id="cc-active-case-warning" style="display:none;margin-top:8px;padding:10px 12px;background:rgba(226,176,74,0.08);border:1px solid rgba(226,176,74,0.2);border-radius:8px;font-size:12px;color:var(--warning);">
+              &#9888; This client already has an active case. Please verify there is no conflict of interest before proceeding.
+            </div>
+          </div>
+          <div id="cc-new-client-ui" style="display:none;">
+            <div class="form-row">
+              <div class="form-group" style="margin-bottom:0"><label class="form-label" style="font-size:11px;">First Name *</label><input class="form-input" id="cc-new-first" placeholder="First name"></div>
+              <div class="form-group" style="margin-bottom:0"><label class="form-label" style="font-size:11px;">Last Name *</label><input class="form-input" id="cc-new-last" placeholder="Last name"></div>
+            </div>
+            <div class="form-row" style="margin-top:8px;">
+              <div class="form-group" style="margin-bottom:0"><label class="form-label" style="font-size:11px;">Email</label><input class="form-input" id="cc-new-email" type="email"></div>
+              <div class="form-group" style="margin-bottom:0"><label class="form-label" style="font-size:11px;">Mobile</label><input class="form-input" id="cc-new-mobile" type="tel"></div>
+            </div>
+            <div style="margin-top:8px;">
+              <label class="form-label" style="font-size:11px;">Client Type</label>
+              <select class="form-select" id="cc-new-type">
+                <option value="individual">Individual / Personal</option>
+                <option value="corporate">Corporate / Business</option>
+              </select>
+            </div>
+          </div>
         </div>
         <div class="form-group">
           <label class="form-label" for="cc-lawyer">Lawyer</label>
@@ -775,6 +801,66 @@ body {
     <button class="modal-close" onclick="document.getElementById('modal-case-detail').classList.remove('active')">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
     </button>
+  </div>
+</div>
+
+<!-- WHAT'S NEW MODAL -->
+<div class="modal-overlay" id="whats-new-modal">
+  <div class="modal glass-strong" style="max-width:520px;max-height:90vh;overflow-y:auto;">
+    <button class="modal-close" id="whats-new-close">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+    </button>
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:4px;">
+      <span style="font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--gold);background:var(--gold-glow);padding:3px 10px;border-radius:20px;border:1px solid rgba(201,169,110,0.2);">New</span>
+    </div>
+    <div class="modal-title" style="font-size:1.6rem;">What's New in Counsel</div>
+    <div class="modal-subtitle">Your client and case management just got a significant upgrade.</div>
+
+    <div style="margin-top:20px;display:flex;flex-direction:column;gap:14px;">
+
+      <div style="padding:14px 16px;border-radius:10px;background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.04);">
+        <div style="font-size:13px;font-weight:600;color:var(--text);margin-bottom:4px;">Full client profiles</div>
+        <div style="font-size:12px;color:var(--text-sec);line-height:1.6;">Client records now capture first and last name separately, date of birth, mobile and landline, a full address with postcode, and National Insurance or company number depending on client type.</div>
+      </div>
+
+      <div style="padding:14px 16px;border-radius:10px;background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.04);">
+        <div style="font-size:13px;font-weight:600;color:var(--text);margin-bottom:4px;">Auto-assigned client references</div>
+        <div style="font-size:12px;color:var(--text-sec);line-height:1.6;">Every new client gets a unique reference number automatically — <span style="color:var(--gold);font-weight:600;">CLT-0001</span>, CLT-0002, and so on. These appear in client lists and can be used for filing.</div>
+      </div>
+
+      <div style="padding:14px 16px;border-radius:10px;background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.04);">
+        <div style="font-size:13px;font-weight:600;color:var(--text);margin-bottom:4px;">Create clients while opening a case</div>
+        <div style="font-size:12px;color:var(--text-sec);line-height:1.6;">When creating a new case, you can now add a brand new client on the spot — no need to navigate to the Clients section first and then come back.</div>
+      </div>
+
+      <div style="padding:14px 16px;border-radius:10px;background:rgba(226,176,74,0.05);border:1px solid rgba(226,176,74,0.1);">
+        <div style="font-size:13px;font-weight:600;color:var(--warning);margin-bottom:4px;">&#9888; Conflict of interest check</div>
+        <div style="font-size:12px;color:var(--text-sec);line-height:1.6;">If you select a client who already has an open case, a warning now appears before you proceed — helping you catch potential conflicts before the case is created.</div>
+      </div>
+
+    </div>
+
+    <div style="margin-top:20px;padding-top:16px;border-top:1px solid rgba(255,255,255,0.05);">
+      <div style="font-size:11px;font-weight:700;color:var(--text-mut);text-transform:uppercase;letter-spacing:.08em;margin-bottom:10px;">Frequently asked</div>
+      <div style="display:flex;flex-direction:column;gap:10px;">
+        <div>
+          <div style="font-size:12px;font-weight:600;color:var(--text-sec);">Do I need to re-enter existing clients?</div>
+          <div style="font-size:12px;color:var(--text-mut);margin-top:2px;">No — all existing clients carry over. You can edit any client to fill in the new fields at your own pace.</div>
+        </div>
+        <div>
+          <div style="font-size:12px;font-weight:600;color:var(--text-sec);">Where do I find a client's reference number?</div>
+          <div style="font-size:12px;color:var(--text-mut);margin-top:2px;">It appears in gold on the Clients page next to their name, and at the top of their detail panel.</div>
+        </div>
+        <div>
+          <div style="font-size:12px;font-weight:600;color:var(--text-sec);">Can I still create clients from the Clients page?</div>
+          <div style="font-size:12px;color:var(--text-mut);margin-top:2px;">Yes — the + New Client button still works exactly as before. The case flow just also supports it now.</div>
+        </div>
+      </div>
+    </div>
+
+    <div style="margin-top:20px;display:flex;gap:10px;justify-content:flex-end;">
+      <button class="btn btn-gold" id="whats-new-got-it" style="min-width:120px;">Got it</button>
+    </div>
   </div>
 </div>
 
@@ -930,6 +1016,7 @@ body {
     updateTopbar();
     updateSidebarFirm();
     loadDashboard();
+    maybeShowWhatsNew();
   }
 
   document.getElementById('login-form').addEventListener('submit', async function(e) {
@@ -1297,6 +1384,73 @@ body {
     });
   });
 
+  // ---- Case modal client helpers ----
+  window.switchClientMode = function(mode) {
+    var existingBtn = document.getElementById('cc-client-mode-existing');
+    var newBtn = document.getElementById('cc-client-mode-new');
+    var existingUi = document.getElementById('cc-existing-client-ui');
+    var newUi = document.getElementById('cc-new-client-ui');
+    var clientSelect = document.getElementById('cc-client');
+    if (!existingBtn || !newBtn) return;
+    if (mode === 'existing') {
+      existingBtn.style.background = 'rgba(201,169,110,0.12)';
+      existingBtn.style.color = 'var(--gold)';
+      newBtn.style.background = 'transparent';
+      newBtn.style.color = 'var(--text-mut)';
+      existingUi.style.display = '';
+      newUi.style.display = 'none';
+      if (clientSelect) clientSelect.required = true;
+      ['cc-new-first','cc-new-last'].forEach(function(id) { var el = document.getElementById(id); if(el) el.required = false; });
+    } else {
+      newBtn.style.background = 'rgba(201,169,110,0.12)';
+      newBtn.style.color = 'var(--gold)';
+      existingBtn.style.background = 'transparent';
+      existingBtn.style.color = 'var(--text-mut)';
+      existingUi.style.display = 'none';
+      newUi.style.display = '';
+      if (clientSelect) clientSelect.required = false;
+      ['cc-new-first','cc-new-last'].forEach(function(id) { var el = document.getElementById(id); if(el) el.required = true; });
+    }
+  };
+
+  function renderClientSection(mode) {
+    var cs = document.getElementById('cc-client');
+    if (!cs) return;
+    var clients = state._caseModalClients || [];
+    var co = '<option value="">Select client...</option>';
+    clients.forEach(function(c) { co += '<option value="' + escapeHtml(c.id) + '">' + escapeHtml(c.name) + (c.client_ref ? ' (' + escapeHtml(c.client_ref) + ')' : '') + '</option>'; });
+    setHtml(cs, co);
+    cs.addEventListener('change', function() {
+      var warn = document.getElementById('cc-active-case-warning');
+      if (!warn || !cs.value) { if(warn) warn.style.display = 'none'; return; }
+      api('/api/clients/' + encodeURIComponent(cs.value) + '/active-cases').then(function(r) {
+        warn.style.display = r.has_active_cases ? '' : 'none';
+      }).catch(function() { warn.style.display = 'none'; });
+    });
+  }
+
+  // ---- What's New Modal ----
+  var WHATS_NEW_KEY = 'counsel_whats_new_v1';
+
+  function maybeShowWhatsNew() {
+    if (localStorage.getItem(WHATS_NEW_KEY)) return;
+    var modal = document.getElementById('whats-new-modal');
+    if (modal) modal.classList.add('active');
+  }
+
+  function dismissWhatsNew() {
+    localStorage.setItem(WHATS_NEW_KEY, '1');
+    var modal = document.getElementById('whats-new-modal');
+    if (modal) modal.classList.remove('active');
+  }
+
+  document.addEventListener('DOMContentLoaded', function() {
+    var closeBtn = document.getElementById('whats-new-close');
+    var gotItBtn = document.getElementById('whats-new-got-it');
+    if (closeBtn) closeBtn.addEventListener('click', dismissWhatsNew);
+    if (gotItBtn) gotItBtn.addEventListener('click', dismissWhatsNew);
+  });
+
   // ---- Create Case Modal ----
   document.getElementById('btn-new-case').addEventListener('click', openCreateCase);
   document.getElementById('create-case-close-btn').addEventListener('click', closeCreateCase);
@@ -1318,10 +1472,10 @@ body {
       var clients = r[0].data || [];
       var lawyers = r[1].lawyers || [];
 
-      var cs = document.getElementById('cc-client');
-      var co = '<option value="">Select client...</option>';
-      clients.forEach(function(c) { co += '<option value="' + escapeHtml(c.id) + '">' + escapeHtml(c.name) + '</option>'; });
-      setHtml(cs, co);
+      // Store clients for the toggle
+      state._caseModalClients = clients;
+      var clientSection = document.getElementById('cc-client-section');
+      if (clientSection) renderClientSection('existing');
 
       var ls = document.getElementById('cc-lawyer');
       var lo = '<option value="">Select lawyer...</option>';
@@ -1339,7 +1493,9 @@ body {
     var errEl = document.getElementById('create-case-error');
     errEl.classList.remove('visible');
 
-    var clientId = document.getElementById('cc-client').value;
+    var mode = document.getElementById('cc-new-client-ui') &&
+               document.getElementById('cc-new-client-ui').style.display !== 'none' ? 'new' : 'existing';
+    var clientId = mode === 'existing' ? document.getElementById('cc-client').value : null;
     var lawyerId = document.getElementById('cc-lawyer').value;
     var title = document.getElementById('cc-title').value.trim();
     var type = document.getElementById('cc-type').value;
@@ -1347,7 +1503,17 @@ body {
     var deadline = document.getElementById('cc-deadline').value || null;
     var notes = document.getElementById('cc-notes').value.trim() || null;
 
-    if (!clientId || !lawyerId || !title || !type) {
+    if (mode === 'new') {
+      var fn = document.getElementById('cc-new-first').value.trim();
+      var ln2 = document.getElementById('cc-new-last').value.trim();
+      if (!fn && !ln2) {
+        setText(errEl, 'Please enter the new client\'s name.');
+        errEl.classList.add('visible');
+        return;
+      }
+    }
+
+    if ((mode === 'existing' && !clientId) || !lawyerId || !title || !type) {
       setText(errEl, 'Please fill in all required fields.');
       errEl.classList.add('visible');
       return;
@@ -1357,6 +1523,23 @@ body {
     btn.disabled = true; setText(btn, 'Creating...');
 
     try {
+      // If new client mode, create client first
+      if (mode === 'new') {
+        var fn2 = document.getElementById('cc-new-first').value.trim();
+        var ln3 = document.getElementById('cc-new-last').value.trim();
+        var newClientRes = await api('/api/clients', {
+          method: 'POST',
+          body: JSON.stringify({
+            name: (fn2 + ' ' + ln3).trim(),
+            first_name: fn2 || null,
+            last_name: ln3 || null,
+            email: document.getElementById('cc-new-email').value || undefined,
+            mobile: document.getElementById('cc-new-mobile').value || undefined,
+            type: document.getElementById('cc-new-type').value,
+          })
+        });
+        clientId = newClientRes.data.id;
+      }
       await api('/api/cases', {
         method: 'POST',
         body: JSON.stringify({ client_id: clientId, lawyer_id: lawyerId, title: title, type: type, priority: priority, deadline: deadline, notes: notes })
@@ -1432,13 +1615,14 @@ body {
         '<button class="btn btn-gold" id="add-client-btn">+ New Client</button></div>' +
         '<div class="glass-card" style="margin-top:16px;"><div class="form-group" style="margin-bottom:16px;">' +
         '<input type="text" id="clients-search" class="form-input" placeholder="Search clients..." style="max-width:320px;"></div>' +
-        '<table class="data-table"><thead><tr><th>Name</th><th>Email</th><th>Phone</th><th>Type</th><th>Created</th></tr></thead><tbody id="clients-tbody">';
+        '<table class="data-table"><thead><tr><th>Ref</th><th>Name</th><th>Email</th><th>Mobile</th><th>Type</th><th>Added</th></tr></thead><tbody id="clients-tbody">';
       clients.forEach(function(cl) {
         h += '<tr class="clickable-row" data-client-id="' + escapeHtml(cl.id) + '">' +
+          '<td><span style="font-size:11px;font-weight:700;color:var(--gold);">' + escapeHtml(cl.client_ref || '—') + '</span></td>' +
           '<td style="font-weight:600;color:var(--text);">' + escapeHtml(cl.name) + '</td>' +
           '<td>' + escapeHtml(cl.email || '—') + '</td>' +
-          '<td>' + escapeHtml(cl.phone || '—') + '</td>' +
-          '<td>' + escapeHtml(cl.type) + '</td>' +
+          '<td>' + escapeHtml(cl.mobile || cl.phone || '—') + '</td>' +
+          '<td>' + escapeHtml(cl.type === 'individual' ? 'Personal' : 'Business') + '</td>' +
           '<td>' + escapeHtml(new Date(cl.created_at).toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'})) + '</td></tr>';
       });
       h += '</tbody></table></div></div>';
@@ -1460,27 +1644,95 @@ body {
   function showAddClientForm() {
     var ov = document.getElementById('modal-case-detail');
     setHtml(document.getElementById('modal-case-detail-body'),
-      '<h2 style="font-family:var(--font-display);font-size:1.5rem;color:var(--text);margin-bottom:20px;">New Client</h2>' +
-      '<form id="add-client-form"><div class="form-group"><label class="form-label">Name *</label><input class="form-input" id="ac-name" required></div>' +
-      '<div class="form-group"><label class="form-label">Email</label><input class="form-input" id="ac-email" type="email"></div>' +
-      '<div class="form-group"><label class="form-label">Phone</label><input class="form-input" id="ac-phone"></div>' +
-      '<div class="form-group"><label class="form-label">Type</label><select class="form-select" id="ac-type"><option value="individual">Individual</option><option value="corporate">Corporate</option></select></div>' +
-      '<div class="form-group"><label class="form-label">Notes</label><textarea class="form-input" id="ac-notes" rows="3"></textarea></div>' +
-      '<button type="submit" class="btn btn-gold" style="width:100%;margin-top:12px;">Create Client</button>' +
-      '<div id="ac-error" class="form-error"></div></form>');
+      '<h2 style="font-family:var(--font-display);font-size:1.5rem;color:var(--text);margin-bottom:4px;">New Client</h2>' +
+      '<p style="font-size:12px;color:var(--text-mut);margin-bottom:20px;">A client reference (CLT-XXXX) will be assigned automatically.</p>' +
+      '<form id="add-client-form">' +
+      '<div class="form-group"><label class="form-label">Client Type</label>' +
+      '<select class="form-select" id="ac-type" onchange="toggleClientTypeFields()">' +
+      '<option value="individual">Individual / Personal</option>' +
+      '<option value="corporate">Corporate / Business</option>' +
+      '</select></div>' +
+      '<div class="form-row">' +
+      '<div class="form-group"><label class="form-label">First Name *</label><input class="form-input" id="ac-first-name" required placeholder="First name"></div>' +
+      '<div class="form-group"><label class="form-label">Last Name *</label><input class="form-input" id="ac-last-name" required placeholder="Last name"></div>' +
+      '</div>' +
+      '<div id="ac-individual-fields">' +
+      '<div class="form-row">' +
+      '<div class="form-group"><label class="form-label">Date of Birth</label><input class="form-input" id="ac-dob" type="date" style="color-scheme:dark;"></div>' +
+      '<div class="form-group"><label class="form-label">National Insurance No.</label><input class="form-input" id="ac-ni" placeholder="AB 12 34 56 C" maxlength="13"></div>' +
+      '</div>' +
+      '</div>' +
+      '<div id="ac-corporate-fields" style="display:none;">' +
+      '<div class="form-group"><label class="form-label">Company Number</label><input class="form-input" id="ac-company-number" placeholder="e.g. 12345678" maxlength="20"></div>' +
+      '</div>' +
+      '<div class="form-row">' +
+      '<div class="form-group"><label class="form-label">Email</label><input class="form-input" id="ac-email" type="email" placeholder="client@email.com"></div>' +
+      '<div class="form-group"><label class="form-label">Mobile</label><input class="form-input" id="ac-mobile" type="tel" placeholder="07700 900000"></div>' +
+      '</div>' +
+      '<div class="form-group"><label class="form-label">Landline</label><input class="form-input" id="ac-landline" type="tel" placeholder="0207 000 0000"></div>' +
+      '<div style="font-size:11px;font-weight:600;color:var(--text-mut);text-transform:uppercase;letter-spacing:.08em;margin:16px 0 10px;">Address</div>' +
+      '<div class="form-group"><label class="form-label">Address Line 1</label><input class="form-input" id="ac-addr1" placeholder="House / flat number and street"></div>' +
+      '<div class="form-group"><label class="form-label">Address Line 2</label><input class="form-input" id="ac-addr2" placeholder="Village, district (optional)"></div>' +
+      '<div class="form-row">' +
+      '<div class="form-group"><label class="form-label">City / Town</label><input class="form-input" id="ac-city"></div>' +
+      '<div class="form-group"><label class="form-label">County</label><input class="form-input" id="ac-county"></div>' +
+      '</div>' +
+      '<div class="form-group"><label class="form-label">Postcode</label><input class="form-input" id="ac-postcode" placeholder="SW1A 1AA" maxlength="10" style="max-width:160px;"></div>' +
+      '<div class="form-group"><label class="form-label">Notes</label><textarea class="form-input" id="ac-notes" rows="2" placeholder="Any additional notes..."></textarea></div>' +
+      '<div id="ac-error" class="form-error"></div>' +
+      '<button type="submit" class="btn btn-gold" style="width:100%;margin-top:16px;">Create Client</button>' +
+      '</form>');
     ov.classList.add('active');
+
     document.getElementById('add-client-form').addEventListener('submit', async function(e) {
       e.preventDefault();
+      var type = document.getElementById('ac-type').value;
+      var firstName = document.getElementById('ac-first-name').value.trim();
+      var lastName = document.getElementById('ac-last-name').value.trim();
+      if (!firstName && !lastName) {
+        var e2 = document.getElementById('ac-error');
+        setText(e2, 'First name or last name is required.');
+        e2.classList.add('visible');
+        return;
+      }
+      var fullName = (firstName + ' ' + lastName).trim();
       try {
-        await api('/api/clients', { method:'POST', body: JSON.stringify({
-          name: document.getElementById('ac-name').value, email: document.getElementById('ac-email').value || undefined,
-          phone: document.getElementById('ac-phone').value || undefined, type: document.getElementById('ac-type').value,
-          notes: document.getElementById('ac-notes').value || undefined
+        await api('/api/clients', { method: 'POST', body: JSON.stringify({
+          name: fullName,
+          first_name: firstName || null,
+          last_name: lastName || null,
+          type: type,
+          email: document.getElementById('ac-email').value || undefined,
+          mobile: document.getElementById('ac-mobile').value || undefined,
+          landline: document.getElementById('ac-landline').value || undefined,
+          date_of_birth: document.getElementById('ac-dob').value || undefined,
+          national_insurance_number: type === 'individual' ? (document.getElementById('ac-ni').value || undefined) : undefined,
+          companies_house_number: type === 'corporate' ? (document.getElementById('ac-company-number').value || undefined) : undefined,
+          address_line1: document.getElementById('ac-addr1').value || undefined,
+          address_line2: document.getElementById('ac-addr2').value || undefined,
+          city: document.getElementById('ac-city').value || undefined,
+          county: document.getElementById('ac-county').value || undefined,
+          postcode: document.getElementById('ac-postcode').value || undefined,
+          notes: document.getElementById('ac-notes').value || undefined,
         })});
-        ov.classList.remove('active'); loadClientsView();
-      } catch(err) { var e2=document.getElementById('ac-error'); setText(e2,(err.data&&err.data.error)||'Failed'); e2.classList.add('visible'); }
+        ov.classList.remove('active');
+        loadClientsView();
+      } catch(err) {
+        var e3 = document.getElementById('ac-error');
+        setText(e3, (err.data && err.data.error) || 'Failed to create client.');
+        e3.classList.add('visible');
+      }
     });
   }
+
+  window.toggleClientTypeFields = function() {
+    var type = document.getElementById('ac-type') && document.getElementById('ac-type').value;
+    var indiv = document.getElementById('ac-individual-fields');
+    var corp = document.getElementById('ac-corporate-fields');
+    if (!indiv || !corp) return;
+    indiv.style.display = type === 'individual' ? '' : 'none';
+    corp.style.display = type === 'corporate' ? '' : 'none';
+  };
 
   async function openClientDetail(id) {
     var ov = document.getElementById('modal-case-detail');
@@ -1490,10 +1742,37 @@ body {
       var cl = await api('/api/clients/' + id);
       var d = cl.data || cl;
       var cases = d.cases || [];
-      var h = '<h2 style="font-family:var(--font-display);font-size:1.5rem;color:var(--text);margin-bottom:4px;">' + escapeHtml(d.name) + '</h2>' +
-        '<div style="color:var(--text-mut);font-size:13px;margin-bottom:20px;">' + escapeHtml(d.type) + ' · ' + escapeHtml(d.email||'No email') + ' · ' + escapeHtml(d.phone||'No phone') + '</div>';
+      var isIndividual = d.type === 'individual';
+
+      var refBadge = d.client_ref
+        ? '<span style="font-size:11px;font-weight:700;color:var(--gold);background:var(--gold-glow);padding:2px 8px;border-radius:4px;border:1px solid rgba(201,169,110,0.2);">' + escapeHtml(d.client_ref) + '</span>'
+        : '';
+
+      var h = '<div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:4px;">' +
+        '<h2 style="font-family:var(--font-display);font-size:1.5rem;color:var(--text);">' + escapeHtml(d.name) + '</h2>' +
+        refBadge + '</div>' +
+        '<div style="color:var(--text-mut);font-size:12px;margin-bottom:20px;">' +
+        escapeHtml(d.type === 'individual' ? 'Individual' : 'Corporate') + '</div>';
+
+      h += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px;">';
+      if (d.email) h += '<div><div style="font-size:10px;font-weight:600;color:var(--text-mut);text-transform:uppercase;letter-spacing:.06em;margin-bottom:2px;">Email</div><div style="font-size:13px;color:var(--text);">' + escapeHtml(d.email) + '</div></div>';
+      if (d.mobile) h += '<div><div style="font-size:10px;font-weight:600;color:var(--text-mut);text-transform:uppercase;letter-spacing:.06em;margin-bottom:2px;">Mobile</div><div style="font-size:13px;color:var(--text);">' + escapeHtml(d.mobile) + '</div></div>';
+      if (d.landline) h += '<div><div style="font-size:10px;font-weight:600;color:var(--text-mut);text-transform:uppercase;letter-spacing:.06em;margin-bottom:2px;">Landline</div><div style="font-size:13px;color:var(--text);">' + escapeHtml(d.landline) + '</div></div>';
+      if (d.date_of_birth && isIndividual) h += '<div><div style="font-size:10px;font-weight:600;color:var(--text-mut);text-transform:uppercase;letter-spacing:.06em;margin-bottom:2px;">Date of Birth</div><div style="font-size:13px;color:var(--text);">' + escapeHtml(new Date(d.date_of_birth).toLocaleDateString('en-GB',{day:'numeric',month:'long',year:'numeric'})) + '</div></div>';
+      if (d.national_insurance_number && isIndividual) h += '<div><div style="font-size:10px;font-weight:600;color:var(--text-mut);text-transform:uppercase;letter-spacing:.06em;margin-bottom:2px;">NI Number</div><div style="font-size:13px;color:var(--text);">' + escapeHtml(d.national_insurance_number) + '</div></div>';
+      if (d.companies_house_number && !isIndividual) h += '<div><div style="font-size:10px;font-weight:600;color:var(--text-mut);text-transform:uppercase;letter-spacing:.06em;margin-bottom:2px;">Company No.</div><div style="font-size:13px;color:var(--text);">' + escapeHtml(d.companies_house_number) + '</div></div>';
+      h += '</div>';
+
+      var addrParts = [d.address_line1, d.address_line2, d.city, d.county, d.postcode].filter(Boolean);
+      if (addrParts.length) {
+        h += '<div style="margin-bottom:16px;padding:10px 12px;background:rgba(255,255,255,0.02);border-radius:8px;border:1px solid rgba(255,255,255,0.04);">' +
+          '<div style="font-size:10px;font-weight:600;color:var(--text-mut);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px;">Address</div>' +
+          '<div style="font-size:13px;color:var(--text);line-height:1.7;">' + addrParts.map(function(p) { return escapeHtml(p); }).join('<br>') + '</div></div>';
+      }
+
       if (d.notes) h += '<div style="color:var(--text-sec);font-size:13px;margin-bottom:16px;padding:12px;background:var(--gold-glow);border-radius:8px;">' + escapeHtml(d.notes) + '</div>';
-      h += '<div style="font-size:12px;font-weight:600;color:var(--text-mut);text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px;">Cases (' + cases.length + ')</div>';
+
+      h += '<div style="font-size:11px;font-weight:600;color:var(--text-mut);text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px;">Cases (' + cases.length + ')</div>';
       cases.forEach(function(c) {
         h += '<div style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid rgba(255,255,255,0.03);">' +
           '<div style="flex:1;"><div style="font-size:13px;font-weight:500;color:var(--text);">' + escapeHtml(c.title) + '</div>' +
@@ -1502,7 +1781,9 @@ body {
       });
       h += '<button class="btn btn-outline" style="width:100%;margin-top:16px;" onclick="showEditClient(\'' + escapeHtml(id) + '\')">Edit Client</button>';
       setHtml(document.getElementById('modal-case-detail-body'), h);
-    } catch(e) { setHtml(document.getElementById('modal-case-detail-body'), '<div class="error-msg">Failed to load client.</div>'); }
+    } catch(e) {
+      setHtml(document.getElementById('modal-case-detail-body'), '<div class="error-msg">Failed to load client.</div>');
+    }
   }
 
   // ---- DOCUMENTS VIEW ----

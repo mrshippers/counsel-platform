@@ -13,11 +13,17 @@ clientsRoutes.get("/", async (c) => {
   const user = c.get("user");
   const supabase = createSupabaseAdmin(c.env);
 
-  const { data, error } = await supabase
+  let query = supabase
     .from("clients")
     .select("*")
-    .eq("firm_id", user.firm_id)
-    .order("name", { ascending: true });
+    .eq("firm_id", user.firm_id);
+
+  const search = c.req.query("search");
+  if (search) {
+    query = query.ilike("name", `%${search}%`);
+  }
+
+  const { data, error } = await query.order("name", { ascending: true });
 
   if (error) {
     return c.json({ error: "Failed to fetch clients" }, 500);
@@ -45,8 +51,19 @@ clientsRoutes.post("/", async (c) => {
       email: body.email || null,
       phone: body.phone || null,
       type: body.type || "individual",
-      companies_house_number: body.companies_house_number || null,
       notes: body.notes || null,
+      first_name: body.first_name || null,
+      last_name: body.last_name || null,
+      date_of_birth: body.date_of_birth || null,
+      mobile: body.mobile || null,
+      landline: body.landline || null,
+      address_line1: body.address_line1 || null,
+      address_line2: body.address_line2 || null,
+      city: body.city || null,
+      county: body.county || null,
+      postcode: body.postcode || null,
+      national_insurance_number: body.national_insurance_number || null,
+      companies_house_number: body.companies_house_number || null,
     })
     .select()
     .single();
@@ -78,6 +95,29 @@ clientsRoutes.get("/:id", async (c) => {
   }
 
   return c.json({ data }, 200);
+});
+
+// GET /api/clients/:id/active-cases — check if client has active cases (for conflict warning)
+clientsRoutes.get("/:id/active-cases", async (c) => {
+  const user = c.get("user");
+  const clientId = c.req.param("id");
+  const supabase = createSupabaseAdmin(c.env);
+
+  const { data, error } = await supabase
+    .from("cases")
+    .select("id, title, status")
+    .eq("client_id", clientId)
+    .eq("firm_id", user.firm_id)
+    .in("status", ["pending", "in_progress"]);
+
+  if (error) {
+    return c.json({ error: "Failed to check active cases" }, 500);
+  }
+
+  return c.json({
+    has_active_cases: (data || []).length > 0,
+    active_cases: data || []
+  }, 200);
 });
 
 // PATCH /api/clients/:id — update client
