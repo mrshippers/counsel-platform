@@ -149,7 +149,7 @@ export default {
 
   async scheduled(_event: ScheduledEvent, _env: Env, _ctx: ExecutionContext) {
     // Daily 8am UTC — trigger deadline reminder emails
-    const url = new URL("/api/deadlines/reminders", "http://internal");
+    const url = new URL("/api/deadlines/send-reminders", "http://internal");
     const req = new Request(url.toString(), { method: "POST" });
     await app.fetch(req, _env);
   },
