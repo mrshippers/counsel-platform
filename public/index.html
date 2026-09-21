@@ -519,7 +519,19 @@ body {
   .mobile-overlay { display: none; position: fixed; inset: 0; background: rgba(6,9,15,0.6); z-index: 199; }
   .mobile-overlay.active { display: block; }
   .hamburger-btn { display: flex !important; }
-  .main-content { padding: 20px 16px; }
+  /* 375px: 1fr tracks and grid items default to min-width:auto and grow to max-content, widening the page */
+  #app.active { grid-template-columns: minmax(0, 1fr); grid-template-rows: auto 1fr; }
+  #login-screen { padding: 16px; }
+  .login-card { padding: 40px 24px; }
+  .topbar, .main-content, .dashboard-left, .dashboard-right, .dashboard-left > *, .dashboard-right > * { min-width: 0; }
+  .topbar { height: auto; min-height: var(--topbar-h); padding: 10px 16px; flex-wrap: wrap; row-gap: 8px; }
+  .topbar > div:first-child { flex: 1 1 100%; min-width: 0; }
+  .topbar-actions { flex: 1 1 100%; justify-content: flex-end; }
+  .topbar-greeting { font-size: 1.2rem; }
+  .main-content { padding: 20px 16px; max-height: none; overflow-x: hidden; }
+  .page-header { flex-wrap: wrap; gap: 8px; }
+  .section-header { flex-wrap: wrap; gap: 8px; }
+  .data-table { display: block; max-width: 100%; overflow-x: auto; }
   .triage-row { grid-template-columns: 1fr 1fr; }
   .dashboard-right { grid-template-columns: 1fr; }
   .form-row { grid-template-columns: 1fr; }
@@ -528,7 +540,8 @@ body {
   .cases-table .col-type, .cases-table th.col-type,
   .cases-table .col-priority, .cases-table th.col-priority { display: none; }
   .data-table .col-type, .data-table th.col-type { display: none; }
-  .cal-cell { min-height: 60px !important; padding: 4px !important; }
+  [style*="repeat(7,1fr)"] { grid-template-columns: repeat(7, minmax(0, 1fr)) !important; }
+  .cal-cell { min-width: 0; overflow: hidden; min-height: 60px !important; padding: 4px !important; }
   .cal-cell .cal-day { font-size: 10px !important; }
   .cal-cell .cal-event { font-size: 8px !important; }
 }
