@@ -8,7 +8,7 @@ import { clientsRoutes } from "./routes/clients";
 import { tasksRoutes } from "./routes/tasks";
 import { documentsRoutes } from "./routes/documents";
 import { calendarRoutes } from "./routes/calendar";
-import { deadlinesRoutes } from "./routes/deadlines";
+import { deadlinesRoutes, sendDeadlineReminders } from "./routes/deadlines";
 import { lawyersRoutes } from "./routes/lawyers";
 import { dashboardRoutes } from "./routes/dashboard";
 import { onboardingRoutes } from "./routes/onboarding";
@@ -148,10 +148,10 @@ export default {
   },
 
   async scheduled(_event: ScheduledEvent, _env: Env, _ctx: ExecutionContext) {
-    // Daily 8am UTC — trigger deadline reminder emails
-    const url = new URL("/api/deadlines/send-reminders", "http://internal");
-    const req = new Request(url.toString(), { method: "POST" });
-    await app.fetch(req, _env);
+    // Daily 8am UTC: deadline reminders for every firm. Called directly, not via the
+    // HTTP route, because that route is behind authMiddleware and the cron has no token.
+    const result = await sendDeadlineReminders(_env, null);
+    if ("error" in result) throw new Error(result.error);
   },
 };
 export { app };

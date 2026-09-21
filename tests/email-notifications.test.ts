@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { app } from "../src/index";
+import worker, { app } from "../src/index";
 import {
   TEST_ENV,
   TEST_FIRM_A,
@@ -179,6 +179,34 @@ describe("Email Notifications — Deadline Reminders", () => {
     const body = await res.json();
     expect(body.skipped).toBe(1);
     expect(mockSendEmail).not.toHaveBeenCalled();
+  });
+});
+
+describe("Email Notifications — Daily cron", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mockResponses = [];
+    mockQueryLog = [];
+  });
+
+  it("scheduled() sends reminders across firms with no user token", async () => {
+    mockResponses.push({
+      data: [
+        { id: "dl-1", firm_id: TEST_FIRM_A.id, lawyer_id: TEST_PARTNER.id, date: "2026-04-08", title: "Filing deadline", cases: { title: "Smith v Jones", id: "case-1" } },
+      ],
+      error: null,
+    });
+    mockResponses.push({
+      data: [{ id: TEST_PARTNER.id, name: "Jessica Townsend", email: "jessica@townsend.law", reminder_emails_enabled: true }],
+      error: null,
+    });
+
+    await worker.scheduled({} as ScheduledEvent, FULL_ENV as never, {} as ExecutionContext);
+
+    expect(mockSendEmail).toHaveBeenCalledOnce();
+    expect(mockSendEmail.mock.calls[0][0].to).toBe("jessica@townsend.law");
+    // Cron is not firm-scoped: no firm_id filter on the deadlines query
+    expect(mockQueryLog.some((q) => q.table === "deadlines" && q.method === "eq" && q.args[0] === "firm_id")).toBe(false);
   });
 });
 
