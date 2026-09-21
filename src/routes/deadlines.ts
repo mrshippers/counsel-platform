@@ -70,10 +70,16 @@ deadlinesRoutes.get("/upcoming", async (c) => {
   return c.json({ data }, 200);
 });
 
-// POST /api/deadlines/send-reminders — trigger 48hr deadline reminders (cron)
+// POST /api/deadlines/send-reminders — trigger 48hr reminders for the caller's firm
 deadlinesRoutes.post("/send-reminders", async (c) => {
-  const user = c.get("user");
-  const supabase = createSupabaseAdmin(c.env);
+  const result = await sendDeadlineReminders(c.env, c.get("user").firm_id);
+  if ("error" in result) return c.json(result, 500);
+  return c.json(result, 200);
+});
+
+// 48hr deadline reminders. firmId null = every firm (the daily cron, which has no user token).
+export async function sendDeadlineReminders(env: AppEnv["Bindings"], firmId: string | null) {
+  const supabase = createSupabaseAdmin(env);
 
   // Calculate 48-hour window
   const now = new Date();
@@ -82,16 +88,15 @@ deadlinesRoutes.post("/send-reminders", async (c) => {
   const in48hStr = in48h.toISOString().split("T")[0];
 
   // Fetch deadlines within 48 hours, with related case, client, and lawyer data
-  const { data: deadlines, error } = await supabase
-    .from("deadlines")
-    .select("*, cases(title, id)")
-    .eq("firm_id", user.firm_id)
+  let query = supabase.from("deadlines").select("*, cases(title, id)");
+  if (firmId) query = query.eq("firm_id", firmId);
+  const { data: deadlines, error } = await query
     .gte("date", todayStr)
     .lte("date", in48hStr)
     .order("date", { ascending: true });
 
   if (error) {
-    return c.json({ error: "Failed to fetch deadlines for reminders" }, 500);
+    return { error: "Failed to fetch deadlines for reminders" };
   }
 
   // Fetch lawyer data separately to avoid ambiguous FK join
@@ -135,7 +140,7 @@ deadlinesRoutes.post("/send-reminders", async (c) => {
 
   // Send reminder emails via Resend
   let emailsSent = 0;
-  const emailClient = createEmailClient(c.env);
+  const emailClient = createEmailClient(env);
   for (const reminder of reminders) {
     try {
       await sendDeadlineReminder(
@@ -153,8 +158,8 @@ deadlinesRoutes.post("/send-reminders", async (c) => {
     }
   }
 
-  return c.json({ reminders, skipped, emails_sent: emailsSent, total: (deadlines || []).length }, 200);
-});
+  return { reminders, skipped, emails_sent: emailsSent, total: (deadlines || []).length };
+}
 
 // PATCH /api/deadlines/:id — update deadline (firm-scoped)
 deadlinesRoutes.patch("/:id", async (c) => {
